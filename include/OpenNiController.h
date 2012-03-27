@@ -28,7 +28,7 @@ public:
 
     //TODO: Look for circular references ( should we be using a weak_ptr? )
 
-    OpenNiDevice operator[]( const size_t &deviceIdx )
+    OpenNiDevice& operator[]( const size_t &deviceIdx )
     {
         return m_DeviceList[ deviceIdx ];
     }
