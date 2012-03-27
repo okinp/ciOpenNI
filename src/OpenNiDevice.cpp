@@ -89,7 +89,7 @@ xn::NodeInfoList OpenNiDevice::getNodeInfoList( const XnPredefinedProductionNode
     return nodeList;
 }
 
-void OpenNiDevice::addGeneratorGraphs( uint32_t startGenerators, uint32_t configureImages )
+void OpenNiDevice::addGeneratorGraphs( boost::uint32_t startGenerators, boost::uint32_t configureImages )
 {
     if( startGenerators & COLORIMAGE )
     {

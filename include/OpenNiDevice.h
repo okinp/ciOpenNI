@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include <XnCppWrapper.h>
+#include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
@@ -28,7 +29,7 @@ public:
     xn::NodeInfo getNodeInfo();
     xn::NodeInfoList getNodeInfoList( const XnPredefinedProductionNodeType &nodeType  );
 
-    void addGeneratorGraphs( uint32_t startGenerators, uint32_t configureImages );
+    void addGeneratorGraphs( boost::uint32_t startGenerators, boost::uint32_t configureImages );
 
     void startGenerator( const XnPredefinedProductionNodeType &nodeType );
     void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
