@@ -23,7 +23,7 @@ public:
     void addProductionGraph();
     bool hasProductionGraph(); 
 
-    void addProductionGraph( const XnPredefinedProductionNodeType &nodeType );
+    void addProductionGraph( const XnPredefinedProductionNodeType &nodeType, boost::uint32_t configureImages );
     bool hasProductionGraph( const XnPredefinedProductionNodeType &nodeType );
 
     xn::NodeInfo getNodeInfo();
@@ -37,19 +37,17 @@ public:
 
     static void checkError( const XnStatus &status, const std::string &strError );
 
-     GeneratorInfoPair getExistingGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType );
-     GeneratorInfoPair getEmptyGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType ); 
+    GeneratorInfoPair getExistingGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType );
+    GeneratorInfoPair getEmptyGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType ); 
     
-    xn::DepthGenerator       m_DepthGenerator;
-    xn::IRGenerator          m_IrGenerator;
-    xn::ImageGenerator       m_ImageGenerator;
-    xn::UserGenerator        m_UserGenerator;
-
-    xn::Generator& chooseGenerator( const XnPredefinedProductionNodeType &nodeType );
     std::vector< GeneratorInfoPair > m_GeneratorPairs;
+
+     XnMapOutputMode getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, boost::uint32_t configureImages );
 
 private:
     xn::Context m_Context;
     NodeInfoRef m_DeviceInfo;
+
+   
     
 };

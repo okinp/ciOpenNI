@@ -24,7 +24,9 @@ public:
 
     void initializeController();
     bool const isInitialized() ;
-   // virtual ImageDataRef getImageData( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType );
+
+    virtual bool start( size_t deviceIdx, boost::uint32_t startGenerators, boost::uint32_t configureImages );
+
 
     //TODO: Look for circular references ( should we be using a weak_ptr? )
 

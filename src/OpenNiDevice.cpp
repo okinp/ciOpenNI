@@ -24,10 +24,10 @@ OpenNiDevice::~OpenNiDevice()
 
 void OpenNiDevice::addProductionGraph()
 {
-    addProductionGraph( XN_NODE_TYPE_DEVICE );
+    addProductionGraph( XN_NODE_TYPE_DEVICE, 0 );
 }
 
-void OpenNiDevice::addProductionGraph( const XnPredefinedProductionNodeType &nodeType )
+void OpenNiDevice::addProductionGraph( const XnPredefinedProductionNodeType &nodeType, boost::uint32_t configureImages )
 {
     if ( !hasProductionGraph( nodeType ) )
     {
@@ -44,11 +44,14 @@ void OpenNiDevice::addProductionGraph( const XnPredefinedProductionNodeType &nod
         xn::ProductionNode productionNode;
         m_Context.CreateProductionTree( node, *gen.first );
         m_GeneratorPairs.push_back( gen );
-        //m_Context.CreateProductionTree( node, chooseGenerator( nodeType ) );
-        //productionNode.AddRef();
-        //GeneratorInfoPair genPair = getEmptyGeneratorInfoPair( nodeType );
-       // genPair.first = &productionNode;
-        //m_GeneratorPairs.push_back( genPair );
+        
+        if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
+        {
+            XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
+            //setting output mode
+            xn::MapGenerator *mGen = static_cast<xn::MapGenerator*>( (gen.first).get() );
+            checkError( mGen->SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
+        }
     }
 }
 
@@ -132,29 +135,6 @@ void OpenNiDevice::startGenerator( const XnPredefinedProductionNodeType &nodeTyp
 //    genInfo.first->StartGenerating();
 }
 
-
-xn::Generator& OpenNiDevice::chooseGenerator( const XnPredefinedProductionNodeType &nodeType )
-{
-    switch ( nodeType )
-    {
-    case XN_NODE_TYPE_IMAGE:
-        return m_ImageGenerator;
-        break;
-    case XN_NODE_TYPE_DEPTH:
-        return m_DepthGenerator;
-        break;
-    case XN_NODE_TYPE_USER:
-        return m_UserGenerator;
-        break;
-    case XN_NODE_TYPE_IR:
-        return m_IrGenerator;
-        break;
-    };
-    throwError("Wrong NodeType was requested");
-}
-
-
-
 void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType )
 {
  //   GeneratorInfoPair genInfo = getExistingGeneratorInfoPairForNodeType( nodeType );
@@ -169,6 +149,113 @@ void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType
 void OpenNiDevice::removeGenerator( const XnPredefinedProductionNodeType &nodeType )
 {
 
+}
+XnMapOutputMode OpenNiDevice::getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, boost::uint32_t configureImages )
+{
+    XnMapOutputMode mode; 
+   if ( nodeType == XN_NODE_TYPE_DEPTH )
+   {
+       //configuring image size
+       if ( configureImages & IMAGE_USER_DEPTH_640X480 )
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+       else if ( configureImages & IMAGE_USER_DEPTH_320X240 )
+       {
+           mode.nXRes = 320;
+           mode.nYRes = 240;
+       }
+       else if ( configureImages & IMAGE_USER_DEPTH_80X60 )
+       {
+           mode.nXRes = 80;
+           mode.nYRes = 60;
+       }
+       else //default
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+
+   } else if ( nodeType == XN_NODE_TYPE_IMAGE )
+   {
+       if( configureImages & IMAGE_COLOR_1280X1024 )
+       {
+          /*
+            XN_RES_QVGA
+            XN_RES_VGA
+            XN_RES_SXGA
+            XN_RES_UXGA
+            XnMapOutputMode Mode;
+            pGenerator->GetMapOutputMode(Mode);
+            Mode.nXRes = Resolution((XnResolution)XN_RES_UXGA).GetXResolution();
+            Mode.nYRes = Resolution((XnResolution)XN_RES_UXGA).GetYResolution();
+            XnStatus nRetVal = pGenerator->SetMapOutputMode(Mode);
+          */
+           mode.nXRes = 1280;
+           mode.nYRes = 1024;
+       }
+       else if( configureImages & IMAGE_COLOR_640X480 )
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+       else if( configureImages & IMAGE_COLOR_320X240 )
+       {
+           mode.nXRes = 320;
+           mode.nYRes = 240;
+       }
+       else //default
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+
+   } else if ( nodeType == XN_NODE_TYPE_USER )
+   {
+       if ( configureImages & IMAGE_USER_DEPTH_640X480 )
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+       else if ( configureImages & IMAGE_USER_DEPTH_320X240 )
+       {
+           mode.nXRes = 320;
+           mode.nYRes = 240;
+       }
+       else if ( configureImages & IMAGE_USER_DEPTH_80X60 )
+       {
+           mode.nXRes = 80;
+           mode.nYRes = 60;
+       }
+       else //default
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+
+   } else if ( nodeType == XN_NODE_TYPE_IR )
+   {
+       if ( configureImages & IMAGE_INFRARED_640X480 )
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+       else if ( configureImages & IMAGE_INFRARED_320X240 )
+       {
+           mode.nXRes = 320;
+           mode.nYRes = 240;
+       }
+       else //default
+       {
+           mode.nXRes = 640;
+           mode.nYRes = 480;
+       }
+   } else {
+
+       throwError(" Requested node type does not support an output mode ");
+   }
+   return mode;
 }
 
 GeneratorInfoPair OpenNiDevice::getExistingGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType ) 

@@ -2,10 +2,12 @@
 #include "cinder/gl/gl.h"
 #include "OpenNiController.h"
 #include "OpenNiDevice.h"
+#include "_2RealTypes.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using namespace _2RealKinectWrapper;
 
 class ciOpenNIAppApp : public AppBasic {
   public:
@@ -35,23 +37,23 @@ void ciOpenNIAppApp::setup()
     m_DepthController->initializeController();
 
 //    (*m_DepthController[0]).addProductionGraph( XN_NODE_TYPE_DEPTH );
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_DEPTH );
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_DEPTH, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[0].m_GeneratorPairs[0].first->StartGenerating();
 
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_IMAGE );
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_IMAGE, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[0].m_GeneratorPairs[1].first->StartGenerating();
 
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_USER );
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_USER, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[0].m_GeneratorPairs[2].first->StartGenerating();
 
 
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_DEPTH );
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_DEPTH, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[1].m_GeneratorPairs[0].first->StartGenerating();
     
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_IMAGE );
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_IMAGE, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[1].m_GeneratorPairs[1].first->StartGenerating();
     
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_USER );
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_USER, IMAGE_CONFIG_DEFAULT );
     (*m_DepthController)[1].m_GeneratorPairs[2].first->StartGenerating();
     
     std::vector< GeneratorInfoPair >::iterator iter;

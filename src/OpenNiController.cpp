@@ -39,6 +39,37 @@ void OpenNiController::initializeController()
      }
 }
 
+bool OpenNiController::start( size_t deviceIdx, boost::uint32_t startGenerators, boost::uint32_t configureImages )
+{
+    if ( deviceIdx >= m_NumberOfDevices )
+        throwError("Device Index is out of bounds");
+    if( startGenerators & COLORIMAGE )
+    {
+        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_IMAGE, configureImages );
+        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_IMAGE, configureImages );
+    }
+    if( startGenerators & DEPTHIMAGE )
+    {
+        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_DEPTH, configureImages );
+        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_DEPTH, configureImages );
+    }
+
+    if( m_GeneratorConfig & COLORIMAGE && m_GeneratorConfig & INFRAREDIMAGE )
+        _2REAL_LOG(warn) << "_2Real: Cannot start color and infrared generator at same time!" << std::endl;
+
+    if( !( m_GeneratorConfig & COLORIMAGE ) && m_GeneratorConfig & INFRAREDIMAGE )
+    {
+        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_IR, configureImages );
+        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_IR, configureImages );
+    }
+    if( m_GeneratorConfig & USERIMAGE || m_GeneratorConfig & USERIMAGE_COLORED )
+    {
+        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_USER, configureImages );
+        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_USER, configureImages );
+    }
+    return true;
+}
+
 xn::Context& OpenNiController::getContext()
 {
     return m_Context;
