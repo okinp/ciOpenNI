@@ -50,7 +50,9 @@ size_t OpenNiController::getNumberOfConnectedDevices()
 void OpenNiController::createDeviceProductionTree( const size_t &deviceIdx )
 {
     std::cout << "----------- Device " << deviceIdx << "------------" << std::endl;
-    OpenNiDevice::checkError( m_Context.CreateProductionTree( m_DeviceList[ deviceIdx ].getNodeInfo() ), "_2Real: Error when creating production tree for device\n" );
+    xn::ProductionNode prodNode;
+    xn::NodeInfo devInfo =  m_DeviceList[ deviceIdx ].getNodeInfo();
+    OpenNiDevice::checkError( m_Context.CreateProductionTree( devInfo, prodNode ), "_2Real: Error when creating production tree for device\n" );
 }
 
 //void openNiController::addAllDevicesToContext()

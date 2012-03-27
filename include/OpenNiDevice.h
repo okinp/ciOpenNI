@@ -28,7 +28,7 @@ public:
     xn::NodeInfo getNodeInfo();
     xn::NodeInfoList getNodeInfoList( const XnPredefinedProductionNodeType &nodeType  );
 
-    void addGeneratorGraphs( size_t startGenerators, size_t configureImages );
+    void addGeneratorGraphs( uint32_t startGenerators, uint32_t configureImages );
 
     void startGenerator( const XnPredefinedProductionNodeType &nodeType );
     void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
