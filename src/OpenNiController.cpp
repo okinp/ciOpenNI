@@ -1,9 +1,13 @@
 #include "OpenNiController.h"
 #include "_2RealUtility.hpp"
 
+using namespace _2RealKinectWrapper;
+
 OpenNiController::OpenNiController()
     :m_NumberOfDevices( 0 ),
-     m_IsInitialized( false )
+     m_IsInitialized( false ),
+     m_GeneratorConfig( CONFIG_DEFAULT ),
+     m_ImageConfig( IMAGE_CONFIG_DEFAULT )
 
 {
 
@@ -11,7 +15,7 @@ OpenNiController::OpenNiController()
 
 OpenNiController::~OpenNiController()
 {
-
+    shutdown();
 }
 
 void OpenNiController::initializeController()
@@ -23,8 +27,6 @@ void OpenNiController::initializeController()
         OpenNiDevice::checkError( m_Context.Init(), "\n_Couldn't  Initialize devices" );
         OpenNiDevice::checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
 
-        size_t numDevs = 0;
-
          xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
          for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
          {
@@ -33,32 +35,20 @@ void OpenNiController::initializeController()
              m_DeviceList.push_back( dev );
              m_NumberOfDevices+=1;
          }
-         std::cout << "The number of connected devices is: " << m_NumberOfDevices << std::endl;
+         _2REAL_LOG(info) << "\n_2Real: Found and init " << (int)m_NumberOfDevices << " device[s]" << std::endl;
      }
 }
 
-xn::Context OpenNiController::getContext()
+xn::Context& OpenNiController::getContext()
 {
     return m_Context;
 }
 
-size_t OpenNiController::getNumberOfConnectedDevices()
+size_t const& OpenNiController::getNumberOfConnectedDevices()
 {
     return m_NumberOfDevices;
 }
 
-void OpenNiController::createDeviceProductionTree( const size_t &deviceIdx )
-{
-    std::cout << "----------- Device " << deviceIdx << "------------" << std::endl;
-    xn::ProductionNode prodNode;
-    xn::NodeInfo devInfo =  m_DeviceList[ deviceIdx ].getNodeInfo();
-    OpenNiDevice::checkError( m_Context.CreateProductionTree( devInfo, prodNode ), "_2Real: Error when creating production tree for device\n" );
-}
-
-//void openNiController::addAllDevicesToContext()
-//{
-//
-//}
 
 void OpenNiController::allignDepthImageToColor( const size_t &deviceIdx )
 {
@@ -70,60 +60,37 @@ void OpenNiController::synchronizeImageAndDepthStreams( const size_t &deviceIdx 
 
 }
 
-void OpenNiController::startDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &imgType )
-{
-
-}
-
-void OpenNiController::stopDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType )
-{
-    //Check if the production tree of the device is created
 
 
-    //Check if the device supports the required generator
-
-
-    //Check if the required generator is alreaady running
-
-
-    //Stop the generator
-}
-
-ImageDataRef OpenNiController::getImageData( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType )
-{
-
-
-
-
-    //1. Is device connected?
-    //2. Does node type support image data?
-
-    //3. Is the generator running?
-
-    //4. Grab data
-
-
-
-    return ImageDataRef();
-}
-
-bool OpenNiController::isDeviceNodeRunning( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const
-{
-    return false;
-}
-
-bool OpenNiController::containsDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const
-{
-    return false;
-}
-
-bool OpenNiController::isInitialized() const
+bool const OpenNiController::isInitialized() 
 {
     return m_IsInitialized;
 }
 
-
-void OpenNiController::checkDeviceSupportForNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const
+bool OpenNiController::shutdown()
 {
+    //freeing memory
+    if( m_IsInitialized )
+    {
+        m_IsInitialized = false;
+        _2REAL_LOG(info) << "_2Real: Shutting down system...";
+        //unlocking and stopping all generators
+        for ( size_t i = 0; i < m_NumberOfDevices; ++i )
+        {
+            //m_DeviceList[i]->shutdown();
+        }
+        //releasing context object
+        m_Context.StopGeneratingAll();
+        m_Context.Release();
 
+        // delete devices, no further deletes needed share_ptrs make the work
+        m_DeviceList.clear();
+
+        m_NumberOfDevices = 0;
+
+        _2REAL_LOG(info) << "OK" << std::endl;
+        return true;
+    }
+    _2REAL_LOG(info) << std::endl << "_2Real: System not initialized..." << std::endl;
+    return false;
 }

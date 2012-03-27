@@ -16,44 +16,35 @@ public:
     OpenNiController();
     ~OpenNiController();
 
-    xn::Context getContext();
-    size_t getNumberOfConnectedDevices();
-
-    void createDeviceProductionTree( const size_t &deviceIdx );
+    xn::Context& getContext();
+    size_t const& getNumberOfConnectedDevices();
 
     void allignDepthImageToColor( const size_t &deviceIdx );
     void synchronizeImageAndDepthStreams( const size_t &deviceIdx );
 
-    void startDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType  &nodeType );
-    void stopDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType );
-
     void initializeController();
+    bool const isInitialized() ;
+   // virtual ImageDataRef getImageData( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType );
 
-    bool isInitialized() const;
+    //TODO: Look for circular references ( should we be using a weak_ptr? )
 
     OpenNiDevice operator[]( const size_t &deviceIdx )
     {
         return m_DeviceList[ deviceIdx ];
     }
 
-    virtual ImageDataRef getImageData( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType );
-
-    //TODO: Look for circular references ( should we be using a weak_ptr? )
-
-    std::vector< OpenNiDevice > m_DeviceList;
-
 private:
-    bool isDeviceNodeRunning( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const;
-    bool containsDeviceNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const;
     
-    void checkDeviceConnected( const size_t &deviceIdx ) const;
-    void checkDeviceSupportForNode( const size_t &deviceIdx, const XnPredefinedProductionNodeType &nodeType ) const;
 
-    
+    virtual bool shutdown();
     
     xn::Context m_Context;
-    size_t m_NumberOfDevices;
-    bool m_IsInitialized;
     xn::NodeInfoList m_DeviceInfo;
+    size_t m_NumberOfDevices;
+
+    bool m_IsInitialized;
+    uint32_t  m_GeneratorConfig;
+    uint32_t  m_ImageConfig;
     
+    std::vector< OpenNiDevice > m_DeviceList;
 };

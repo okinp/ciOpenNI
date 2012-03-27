@@ -34,28 +34,28 @@ void ciOpenNIAppApp::setup()
     m_DepthController = new OpenNiController();
     m_DepthController->initializeController();
 
-    m_DepthController->m_DeviceList[0].addProductionGraph( XN_NODE_TYPE_DEPTH );
-    m_DepthController->m_DeviceList[0].m_GeneratorPairs[0].first->StartGenerating();
+//    (*m_DepthController[0]).addProductionGraph( XN_NODE_TYPE_DEPTH );
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_DEPTH );
+    (*m_DepthController)[0].m_GeneratorPairs[0].first->StartGenerating();
 
-    m_DepthController->m_DeviceList[0].addProductionGraph( XN_NODE_TYPE_IMAGE );
-    m_DepthController->m_DeviceList[0].m_GeneratorPairs[1].first->StartGenerating();
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_IMAGE );
+    (*m_DepthController)[0].m_GeneratorPairs[1].first->StartGenerating();
 
-    m_DepthController->m_DeviceList[0].addProductionGraph( XN_NODE_TYPE_USER );
-    m_DepthController->m_DeviceList[0].m_GeneratorPairs[2].first->StartGenerating();
+    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_USER );
+    (*m_DepthController)[0].m_GeneratorPairs[2].first->StartGenerating();
 
 
-    m_DepthController->m_DeviceList[1].addProductionGraph( XN_NODE_TYPE_DEPTH );
-    m_DepthController->m_DeviceList[1].m_GeneratorPairs[0].first->StartGenerating();
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_DEPTH );
+    (*m_DepthController)[1].m_GeneratorPairs[0].first->StartGenerating();
     
-    m_DepthController->m_DeviceList[1].addProductionGraph( XN_NODE_TYPE_IMAGE );
-    m_DepthController->m_DeviceList[1].m_GeneratorPairs[1].first->StartGenerating();
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_IMAGE );
+    (*m_DepthController)[1].m_GeneratorPairs[1].first->StartGenerating();
     
-    m_DepthController->m_DeviceList[1].addProductionGraph( XN_NODE_TYPE_USER );
-
-    m_DepthController->m_DeviceList[1].m_GeneratorPairs[2].first->StartGenerating();
+    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_USER );
+    (*m_DepthController)[1].m_GeneratorPairs[2].first->StartGenerating();
     
     std::vector< GeneratorInfoPair >::iterator iter;
-    iter = m_DepthController->m_DeviceList[0].m_GeneratorPairs.end();
+    iter = (*m_DepthController)[0].m_GeneratorPairs.end();
     iter--;
     xn::UserGenerator *ugen = static_cast<xn::UserGenerator*>( (iter->first).get() );
     xn::PoseDetectionCapability p  = ugen->GetPoseDetectionCap();
