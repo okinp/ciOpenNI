@@ -1,5 +1,6 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
+#include "cinder/gl/Texture.h"
 #include "OpenNiController.h"
 #include "OpenNiDevice.h"
 #include "_2RealTypes.h"
@@ -16,7 +17,8 @@ class ciOpenNIAppApp : public AppBasic {
 	void update();
 	void draw();
     void mouseDown( MouseEvent event );
-    OpenNiController *m_DepthController;
+    OpenNiController *m_KinectController;
+    xn::Context theContext;
 };
 
 void ciOpenNIAppApp::prepareSettings( Settings* settings )
@@ -28,73 +30,38 @@ void ciOpenNIAppApp::prepareSettings( Settings* settings )
     freopen_s( &f, "CON", "w", stdout );
 #endif
 
-  //  settings->setWindowSize( m_iScreenWidth, m_iScreenHeight );
 }
 
 void ciOpenNIAppApp::setup()
 {
-    m_DepthController = new OpenNiController();
-    m_DepthController->initializeController();
-
-//    (*m_DepthController[0]).addProductionGraph( XN_NODE_TYPE_DEPTH );
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_DEPTH, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[0].m_GeneratorPairs[0].first->StartGenerating();
-
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_IMAGE, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[0].m_GeneratorPairs[1].first->StartGenerating();
-
-    (*m_DepthController)[0].addProductionGraph( XN_NODE_TYPE_USER, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[0].m_GeneratorPairs[2].first->StartGenerating();
-
-
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_DEPTH, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[1].m_GeneratorPairs[0].first->StartGenerating();
-    
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_IMAGE, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[1].m_GeneratorPairs[1].first->StartGenerating();
-    
-    (*m_DepthController)[1].addProductionGraph( XN_NODE_TYPE_USER, IMAGE_CONFIG_DEFAULT );
-    (*m_DepthController)[1].m_GeneratorPairs[2].first->StartGenerating();
-    
-    std::vector< GeneratorInfoPair >::iterator iter;
-    iter = (*m_DepthController)[0].m_GeneratorPairs.end();
-    iter--;
-    xn::UserGenerator *ugen = static_cast<xn::UserGenerator*>( (iter->first).get() );
-    xn::PoseDetectionCapability p  = ugen->GetPoseDetectionCap();
+    m_KinectController = new OpenNiController();
+    m_KinectController->initializeController();
+    m_KinectController->start( 0, COLORIMAGE | DEPTHIMAGE | USERIMAGE, IMAGE_CONFIG_DEFAULT );
+    theContext = m_KinectController->getContext();
+   // m_KinectController->start( 1, COLORIMAGE | DEPTHIMAGE | USERIMAGE, IMAGE_CONFIG_DEFAULT );
 }
 
 void ciOpenNIAppApp::update()
 {
-    if ( !m_DepthController->isInitialized() && false )
+    if ( !m_KinectController->isInitialized() && false )
     {
-//        m_DepthController->initializeController();
-//        m_DepthController->m_DeviceList[0].addProductionGraph( XN_NODE_TYPE_DEPTH );
-//        m_DepthController->m_DeviceList[0].m_DepthGenerator.StartGenerating();
 
-       // m_DepthController->m_DeviceList[1].addProductionGraph( XN_NODE_TYPE_USER );
-       // m_DepthController->m_DeviceList[1].m_UserGenerator.StartGenerating();
-        //m_DepthController->m_DeviceList[0].m_IrGenerator.StartGenerating();
-
-    } 
-
-    //m_DepthController->createDeviceProductionTree( 0 );
-    xn::NodeInfoList user;
-    xn::Context cont = m_DepthController->getContext();
-    cont.EnumerateExistingNodes(user, XN_NODE_TYPE_USER );
-    if ( user.IsEmpty() )
-    {
-        std::cout << "No User Generator " << std::endl;
-    } else
-    {
-        std::cout << "There is a user generator" << std::endl;
     }
+
+    xn::NodeInfoList depthList;
+    theContext.EnumerateExistingNodes( depthList );
+
+    
 }
 
 void ciOpenNIAppApp::draw()
 {
 	// clear out the window with black
 	gl::clear( Color( 0, 0, 0 ) ); 
-
+    theContext.WaitNoneUpdateAll();
+    boost::shared_array<unsigned char> imgRef = m_KinectController->getImageData( 0, DEPTHIMAGE, true, 0 );
+    Channel depth( 640, 480, 640, 1, imgRef.get() );
+    gl::draw( gl::Texture( depth ) );
 }
 
 void ciOpenNIAppApp::mouseDown( MouseEvent event )

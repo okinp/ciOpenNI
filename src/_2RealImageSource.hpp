@@ -120,7 +120,7 @@ class _2RealImageSource
 		void setMirroring( const bool mirrored );
 		void setCropping( const bool cropped );
 
-		friend class OpenNIInfraredGenerator;
+        friend class OpenNIInfraredGenerator;
 		friend class OpenNIDepthGenerator;
 		friend class OpenNIColorGenerator;
 		friend class OpenNIUserGenerator;
