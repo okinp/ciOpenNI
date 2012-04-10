@@ -3,7 +3,18 @@
 #include "_2RealTypes.h"
 
 
+
 using namespace  _2RealKinectWrapper;
+
+struct the_null_deleter
+{
+    void operator()(void const *) const
+    {
+        
+    }
+};
+
+
 OpenNiDevice::OpenNiDevice()
     :m_Context( xn::Context() ),
      m_DeviceInfo( NodeInfoRef() )
@@ -324,6 +335,7 @@ bool OpenNiDevice::hasNewData()
 boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedProductionNodeType &nodeType )
 {
     boost::shared_array< unsigned char > buffer;//( new unsigned char[640*480] );
+    //_2RealImageSource<unsigned char> imgSource;
     if ( nodeType == XN_NODE_TYPE_IMAGE && hasProductionGraph( XN_NODE_TYPE_IMAGE ) )
     {
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IMAGE );
@@ -333,15 +345,16 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
         img.GetMetaData( imgMeta );
         int xres = imgMeta.FullXRes();
         int yres = imgMeta.FullYRes();
-        buffer = boost::shared_array<unsigned char >( new unsigned char[ xres * yres ], null_deleter() );
-        //buffer = boost::shared_array< unsigned char>( (unsigned char*) img.GetImageMap(), null_deleter()); 
+        buffer = boost::shared_array<unsigned char >( new unsigned char[ xres * yres ]);
+        //buffer = boost::shared_array< unsigned char>( (unsigned char*) img.GetImageMap(), the_null_deleter()); 
     }
     else if ( nodeType == XN_NODE_TYPE_DEPTH && hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
     {
+        //std::cout << "Depth" << std::endl;
         boost::shared_array<uint16_t> buffer16 = getBuffer16(XN_NODE_TYPE_DEPTH );
-        boost::shared_array<unsigned char> buffer( new unsigned char[640*480], null_deleter() );
+        buffer = boost::shared_array<unsigned char>( new unsigned char[640*480]);
         convertImage_16_to_8(buffer16, buffer, 640*480, _2REAL_OPENNI_DEPTH_NORMALIZATION_16_TO_8 );
-        //buffer = boost::shared_array< unsigned char>( (unsigned char*) depth.GetDepthMap(), null_deleter()); 
+        //buffer = boost::shared_array< unsigned char>( (unsigned char*) depth.GetDepthMap(), the_null_deleter()); 
     } 
 
     else if ( nodeType == XN_NODE_TYPE_IR && hasProductionGraph( XN_NODE_TYPE_IR ) )
@@ -349,7 +362,7 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
         xn::Generator generator  = *(gen.first);
         xn::IRGenerator ir = static_cast< xn::IRGenerator >( generator );
-        buffer = boost::shared_array< unsigned char>( (unsigned char*) ir.GetIRMap(), null_deleter() );
+        buffer = boost::shared_array< unsigned char>( (unsigned char*) ir.GetIRMap(), the_null_deleter() );
     } 
     else if ( nodeType == XN_NODE_TYPE_USER && hasProductionGraph( XN_NODE_TYPE_USER ) )
     {
@@ -367,7 +380,7 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
 
 boost::shared_array<uint16_t> OpenNiDevice::getBuffer16( const XnPredefinedProductionNodeType &nodeType )
 {
-    boost::shared_array<uint16_t> buffer;
+    boost::shared_array<uint16_t> buffer;//( new uint16_t[640*480]);
     if ( nodeType == XN_NODE_TYPE_DEPTH && hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
     {
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_DEPTH );
@@ -375,14 +388,15 @@ boost::shared_array<uint16_t> OpenNiDevice::getBuffer16( const XnPredefinedProdu
         xn::DepthGenerator depth = static_cast< xn::DepthGenerator >( generator );
         xn::DepthMetaData g_depthMD;
         depth.GetMetaData( g_depthMD );
-        buffer = boost::shared_array< uint16_t >( (uint16_t*) g_depthMD.Data(), null_deleter());
+        const XnDepthPixel* depthData = g_depthMD.Data();
+        buffer = boost::shared_array< uint16_t >( (uint16_t*) depthData, the_null_deleter() );
     }
     else if ( nodeType == XN_NODE_TYPE_IR && hasProductionGraph( XN_NODE_TYPE_IR ) )
     {
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
         xn::Generator generator  = *(gen.first);
         xn::IRGenerator ir = static_cast< xn::IRGenerator >( generator );
-        buffer = boost::shared_array< uint16_t >( (uint16_t*) ir.GetIRMap(), null_deleter() );
+        buffer = boost::shared_array< uint16_t >( (uint16_t*) ir.GetIRMap());
     }
     else 
     {
@@ -395,6 +409,14 @@ boost::shared_array<uint16_t> OpenNiDevice::getBuffer16( const XnPredefinedProdu
 void OpenNiDevice::convertImage_16_to_8( const boost::shared_array<uint16_t> source, boost::shared_array<unsigned char> destination, uint32_t size, const int normalizing )
 {
     //iterating each pixel and writing normalized pixel data
+   // std::cout << "-------------------------------------------------------------------"<< std::endl;
     for( unsigned int i=0; i<size; ++i )
-        destination[i] = (unsigned char) ( source[i] * ( (float)( 1 << 8 ) / normalizing ) ); //normalized 16bit to 8bit
+    {
+        destination[i] = (unsigned char) ( source[i] * ( (float)( 1 << 8 ) / normalizing ) ); 
+        //normalized 16bit to 8bit
+//        if (i < 100 ) {
+//            std::cout << "the pixel value is: " << int(destination[i]) << std::endl;
+//        }
+        
+    }
 }

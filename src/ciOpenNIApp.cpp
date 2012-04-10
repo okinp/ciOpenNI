@@ -19,6 +19,8 @@ class ciOpenNIAppApp : public AppBasic {
     void mouseDown( MouseEvent event );
     OpenNiController *m_KinectController;
     xn::Context theContext;
+    boost::shared_array<unsigned char> imgRefDev0;
+    boost::shared_array<unsigned char> imgRefDev1;
 };
 
 void ciOpenNIAppApp::prepareSettings( Settings* settings )
@@ -29,40 +31,38 @@ void ciOpenNIAppApp::prepareSettings( Settings* settings )
     AllocConsole();
     freopen_s( &f, "CON", "w", stdout );
 #endif
-
+    settings->setWindowSize( 1280, 480 );
 }
 
 void ciOpenNIAppApp::setup()
 {
     m_KinectController = new OpenNiController();
     m_KinectController->initializeController();
-    m_KinectController->start( 0, DEPTHIMAGE, IMAGE_CONFIG_DEFAULT );
-    m_KinectController->startGenerator(0, DEPTHIMAGE );
+    m_KinectController->start( 0, DEPTHIMAGE | INFRAREDIMAGE, IMAGE_CONFIG_DEFAULT );
+   // m_KinectController->start( 1, DEPTHIMAGE | COLORIMAGE, IMAGE_CONFIG_DEFAULT );
+    m_KinectController->startGenerator(0, DEPTHIMAGE | INFRAREDIMAGE );
+   // m_KinectController->startGenerator(1, DEPTHIMAGE | COLORIMAGE );
+    
     theContext = m_KinectController->getContext();
-   // m_KinectController->start( 1, COLORIMAGE | DEPTHIMAGE | USERIMAGE, IMAGE_CONFIG_DEFAULT );
 }
 
 void ciOpenNIAppApp::update()
 {
-//    if ( !m_KinectController->isInitialized() && false )
-//    {
-//
-//    }
-//
-//    xn::NodeInfoList depthList;
-//    theContext.EnumerateExistingNodes( depthList );
-    theContext.WaitNoneUpdateAll();
-    
+    m_KinectController->updateContext();
+    imgRefDev0 = m_KinectController->getImageData( 0, INFRAREDIMAGE );
+   // imgRefDev1 = m_KinectController->getImageData( 1, DEPTHIMAGE );
 }
 
 void ciOpenNIAppApp::draw()
 {
 	// clear out the window with black
-	gl::clear( Color( 0, 0, 0 ) ); 
-   // theContext.WaitNoneUpdateAll();
-    boost::shared_array<unsigned char> imgRef = m_KinectController->getImageData( 0, DEPTHIMAGE, true, 0 );
-    Channel depth( 640, 480, 640, 1, imgRef.get() );
-    gl::draw( gl::Texture( depth ) );
+	gl::clear( Color( 0, 0, 0 ) );
+    Channel depth0( 640, 480, 640, 1, imgRefDev0.get() );
+    //Channel depth1( 640, 480, 640, 1, imgRefDev1.get() );
+
+    gl::draw( gl::Texture( depth0 ) );
+   // gl::draw( gl::Texture( depth1 ), ci::Rectf(640,0,1280, 480) );
+
 }
 
 void ciOpenNIAppApp::mouseDown( MouseEvent event )

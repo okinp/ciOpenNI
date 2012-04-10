@@ -21,7 +21,6 @@ public:
     xn::Context& getContext();
     size_t const& getNumberOfConnectedDevices();
 
-    void addDeviceToContext( const size_t &deviceIdx );
     void allignDepthImageToColor( const size_t &deviceIdx );
     void synchronizeImageAndDepthStreams( const size_t &deviceIdx );
     
@@ -42,13 +41,33 @@ public:
     virtual const bool isNewData(const uint32_t deviceID, _2RealGenerator type);
     virtual void resetSkeleton( const uint32_t deviceID, const uint32_t id );
     virtual void resetAllSkeletons();
+
     
-    std::vector<XnPredefinedProductionNodeType> getXnPredefinedProductionNodeTypes( uint32_t startGenerators ); 
     
-    //TODO: Look for circular references ( should we be using a weak_ptr? )
+    virtual boost::shared_array<unsigned char> getImageData( const uint32_t deviceID, _2RealGenerator type );
+    
+    void updateContext();
+    
     OpenNiDevice& operator[]( const size_t deviceIdx );
+private:
+    bool m_IsInitialized;
     
-    virtual boost::shared_array<unsigned char> getImageData( const uint32_t deviceID, _2RealGenerator type, bool waitAndBlock, const uint8_t userId );
+    size_t           m_NumberOfDevices;
+    xn::Context      m_Context;
+    xn::NodeInfoList m_DeviceInfo;
+    
+    uint32_t  m_ImageConfig;
+    uint32_t  m_GeneratorConfig;
+
+    std::vector< OpenNiDevice > m_DeviceList;
+
+    void checkDeviceRunning(uint8_t deviceIdx ) const;
+    bool setGeneratorState( size_t deviceIdx, uint32_t requestedGenerator, bool start );
+    std::vector<XnPredefinedProductionNodeType> getRequestedNodes( uint32_t startGenerators ); 
+    virtual bool shutdown();
+    
+
+
     
     //virtual boost::shared_array<uint16_t> getImageDataDepth16Bit( const uint32_t deviceID, bool waitAndBlock=false );
 
@@ -79,21 +98,4 @@ public:
     //virtual void setLogLevel(_2RealLogLevel iLevel)
     //virtual void setLogOutputStream(std::ostream* outStream)
     //void checkError( XnStatus status, std::string strError ) const  
-private:
-    void checkDeviceRunning(uint8_t deviceIdx ) const;
-
-private:
-    
-
-    virtual bool shutdown();
-    
-    xn::Context m_Context;
-    xn::NodeInfoList m_DeviceInfo;
-    size_t m_NumberOfDevices;
-
-    bool m_IsInitialized;
-    uint32_t  m_GeneratorConfig;
-    uint32_t  m_ImageConfig;
-    
-    std::vector< OpenNiDevice > m_DeviceList;
 };

@@ -41,15 +41,6 @@ void OpenNiController::initializeController()
     }
 }
 
-void OpenNiController::addDeviceToContext( const size_t &deviceIdx )
-{
-    if ( deviceIdx < m_NumberOfDevices )
-    {
-        m_DeviceList[ deviceIdx ].addDeviceToContext();
-    } else {
-        throwError("Device index out of range");
-    }
-}
 
 bool OpenNiController::start( size_t deviceIdx, uint32_t startGenerators, uint32_t configureImages )
 {
@@ -57,7 +48,7 @@ bool OpenNiController::start( size_t deviceIdx, uint32_t startGenerators, uint32
     m_GeneratorConfig = startGenerators;
     m_ImageConfig     = configureImages;
     
-    std::vector<XnPredefinedProductionNodeType> requestedNodes =  getXnPredefinedProductionNodeTypes( m_GeneratorConfig );
+    std::vector<XnPredefinedProductionNodeType> requestedNodes =  getRequestedNodes( m_GeneratorConfig );
     for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
     {
         m_DeviceList[ deviceIdx ].addProductionGraph( *iter, m_ImageConfig );
@@ -67,27 +58,19 @@ bool OpenNiController::start( size_t deviceIdx, uint32_t startGenerators, uint32
 
 bool OpenNiController::startGenerator( size_t deviceIdx, uint32_t startGenerator )
 {
-    checkDeviceRunning( deviceIdx );
-    //Check if generator exists
-    std::vector<XnPredefinedProductionNodeType> requestedNodes = getXnPredefinedProductionNodeTypes( startGenerator );
-    std::cout << "The number of generators that were requested to start is: " << requestedNodes.size() << std::endl;
-    
-    if ( requestedNodes.size() == 0 ) 
-    {
-        return false;
-    }
-    
-    for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
-    {
-        m_DeviceList[ deviceIdx ].startGenerator(*iter);
-    }
+    return setGeneratorState( deviceIdx, startGenerator, true );
 }
 
 bool OpenNiController::stopGenerator( size_t deviceIdx, uint32_t stopGenerator )
 {
+    return setGeneratorState( deviceIdx, stopGenerator, false );
+}
+
+bool OpenNiController::setGeneratorState( size_t deviceIdx, uint32_t requestedGenerator, bool start )
+{
     checkDeviceRunning( deviceIdx );
     //Check if generator exists
-    std::vector<XnPredefinedProductionNodeType> requestedNodes = getXnPredefinedProductionNodeTypes( stopGenerator );
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( requestedGenerator );
     
     if ( requestedNodes.size() == 0 ) 
     {
@@ -96,42 +79,20 @@ bool OpenNiController::stopGenerator( size_t deviceIdx, uint32_t stopGenerator )
     
     for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
     {
-        m_DeviceList[ deviceIdx ].stopGenerator(*iter);
+        if ( start ){
+            m_DeviceList[ deviceIdx ].startGenerator(*iter);
+        } else {
+            m_DeviceList[ deviceIdx ].stopGenerator(*iter);
+        }
+        
     }
+    return true;
 }
 
-std::vector<XnPredefinedProductionNodeType> OpenNiController::getXnPredefinedProductionNodeTypes( uint32_t startGenerators )
+bool const OpenNiController::isInitialized() 
 {
-    std::vector<XnPredefinedProductionNodeType> XnRequestedNodeSet;
-    
-    if(  ( m_GeneratorConfig & COLORIMAGE )  &&  ( m_GeneratorConfig & INFRAREDIMAGE )  )
-    {
-        _2REAL_LOG(warn) << "_2Real: Cannot start color and infrared generator at same time!" << std::endl;
-    }
-    
-    
-    if( m_GeneratorConfig & COLORIMAGE )
-    {
-        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IMAGE );
-    }
-    
-    if( m_GeneratorConfig & DEPTHIMAGE )
-    {
-        XnRequestedNodeSet.push_back( XN_NODE_TYPE_DEPTH );
-    }
-    
-    if( !( m_GeneratorConfig & COLORIMAGE ) && m_GeneratorConfig & INFRAREDIMAGE )
-    {
-        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IR );
-    }
-    
-    if( m_GeneratorConfig & USERIMAGE || m_GeneratorConfig & USERIMAGE_COLORED )
-    {
-        XnRequestedNodeSet.push_back( XN_NODE_TYPE_USER );
-    }
-    
-    return XnRequestedNodeSet;
-}
+    return m_IsInitialized;
+} 
 
 xn::Context& OpenNiController::getContext()
 {
@@ -143,23 +104,38 @@ size_t const& OpenNiController::getNumberOfConnectedDevices()
     return m_NumberOfDevices;
 }
 
-
-void OpenNiController::allignDepthImageToColor( const size_t &deviceIdx )
+std::vector<XnPredefinedProductionNodeType> OpenNiController::getRequestedNodes( uint32_t startGenerators )
 {
-
+    std::vector<XnPredefinedProductionNodeType> XnRequestedNodeSet;
+    
+    if(  ( startGenerators & COLORIMAGE )  &&  ( startGenerators & INFRAREDIMAGE )  )
+    {
+        _2REAL_LOG(warn) << "_2Real: Cannot have color and infrared generators at same time!" << std::endl;
+    }
+    
+    
+    if( startGenerators & COLORIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IMAGE );
+    }
+    
+    if( startGenerators & DEPTHIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_DEPTH );
+    }
+    
+    if( !( startGenerators & COLORIMAGE ) && startGenerators & INFRAREDIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IR );
+    }
+    
+    if( startGenerators & USERIMAGE || startGenerators & USERIMAGE_COLORED )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_USER );
+    }
+    return XnRequestedNodeSet;
 }
 
-void OpenNiController::synchronizeImageAndDepthStreams( const size_t &deviceIdx )
-{
-
-}
-
-
-
-bool const OpenNiController::isInitialized() 
-{
-    return m_IsInitialized;
-}
 
 bool OpenNiController::shutdown()
 {
@@ -194,88 +170,102 @@ OpenNiDevice& OpenNiController::operator[]( const size_t deviceIdx  )
     return m_DeviceList[ deviceIdx ];
 }
 
+
+void OpenNiController::allignDepthImageToColor( const size_t &deviceIdx )
+{
+    
+}
+
+void OpenNiController::synchronizeImageAndDepthStreams( const size_t &deviceIdx )
+{
+    
+}
+
 void OpenNiController::setMirrored( const uint32_t deviceIdx, _2RealGenerator type, bool flag )
 {
     checkDeviceRunning( deviceIdx );
-    GeneratorInfoPair gen;
-    switch( type )
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( type );
+    
+    if ( requestedNodes.size() == 0 )
     {
-        case COLORIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_IMAGE ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due to non activated color generator..." << std::endl;
-                return;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_IMAGE );
-            OpenNiDevice::checkError( (gen.first)->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for color image\n" );
-            break;
-        case DEPTHIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due to non activated depth generator..." << std::endl;
-                return;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_DEPTH );
-            OpenNiDevice::checkError( (gen.first)->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for depth image\n" );
-            break;
-        case INFRAREDIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_IR ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due non activated infrared generator..." << std::endl;
-                return;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
-            OpenNiDevice::checkError( (gen.first)->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for IR image\n" );
-            break;
-        case USERIMAGE_COLORED:
-        case USERIMAGE:
-            break;
-        default:
-            throwError( "_2RealKinectWrapper::setMirrored() Error: Wrong type of generator assigned?!" );
+        throwError( "_2Real::setMirrored() Error: wrong type of generator provided!");
+    } else if ( requestedNodes.size() > 1 ) {
+        _2REAL_LOG(warn) << "_2Real: setMirrored() doesn't accept combinations of _2RealGenerator types..." << std::endl;
+        return;
+    } 
+    
+    if ( requestedNodes[0] == XN_NODE_TYPE_USER )
+        return;
+    
+    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( requestedNodes[0] ) )
+    {
+        _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due to non activated generator..." << std::endl;
+        return;
     }
+    GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( requestedNodes[0] );
+    OpenNiDevice::checkError( (gen.first)->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for image\n" );
+    
 }
+
 
 bool OpenNiController::isMirrored( const uint32_t deviceIdx, _2RealGenerator type )
 {
     checkDeviceRunning( deviceIdx );
-    GeneratorInfoPair gen;
     bool flag = true;
-    switch( type )
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( type );
+    
+    if ( requestedNodes.size() == 0 )
     {
-        case COLORIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_IMAGE ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot check mirroring state on a non activated color generator..." << std::endl;
-                return false;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_IMAGE );
-            flag = (gen.first)->GetMirrorCap().IsMirrored();
-            break;
-        case DEPTHIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot check mirroring state on a non activated depth generator..." << std::endl;
-                return false;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_DEPTH );
-            flag = (gen.first)->GetMirrorCap().IsMirrored();
-            break;
-        case INFRAREDIMAGE:
-            if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_IR ) )
-            {
-                _2REAL_LOG(warn) << "_2Real: Cannot check mirroring state on a non activated infrared generator..." << std::endl;
-                return false;
-            }
-            gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
-            flag = (gen.first)->GetMirrorCap().IsMirrored();
-            break;
-        case USERIMAGE_COLORED:
-        case USERIMAGE:
-            break;
-        default:
-            throwError( "_2RealKinectWrapper::setMirrored() Error: Wrong type of generator assigned?!" );
+        throwError( "_2Real::setMirrored() Error: wrong type of generator provided!");
+    } else if ( requestedNodes.size() > 1 ) {
+        _2REAL_LOG(warn) << "_2Real: isMirrored() doesn't accept combinations of _2RealGenerator types..." << std::endl;
+        return false;
+    } 
+    
+    
+    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( requestedNodes[0] ) )
+    {
+        _2REAL_LOG(warn) << "_2Real: Cannot check mirror capability due to non activated generator..." << std::endl;
+        return false;
+    }
+    
+    if ( requestedNodes[0] != XN_NODE_TYPE_USER )
+    {
+        GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( requestedNodes[0] );
+        flag = (gen.first)->GetMirrorCap().IsMirrored();
     }
     return flag;
+}
+
+boost::shared_array<unsigned char> OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type )
+{
+    checkDeviceRunning( deviceID );
+    
+    OpenNiDevice device = m_DeviceList[ deviceID ];
+    
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( type );
+    
+    if ( requestedNodes.size() > 1 )
+    {
+        std::cout << "The size is: " << requestedNodes.size() << std::endl; 
+        throwError( "_2Real:: getImageData() Error: wrong type of generator provided!");
+    } else if ( requestedNodes.size() == 0 )
+    {
+        throwError( "_2Real:: getImageData() Error: WTF!");
+    }
+    
+    if ( !device.hasProductionGraph( requestedNodes[0] )  )
+    {
+        _2REAL_LOG(warn) << "_2Real: getImageData()  Generator is not activated! Cannot fetch image..." << std::endl;
+        return boost::shared_array<unsigned char>(); //NULL shared array
+    }
+    boost::shared_array<unsigned char> imageBuffer = device.getBuffer( requestedNodes[0] );
+    return imageBuffer;
+}
+
+void OpenNiController::updateContext()
+{
+    m_Context.WaitAnyUpdateAll();
 }
 
 void OpenNiController::checkDeviceRunning( uint8_t deviceIdx ) const
@@ -336,75 +326,4 @@ void OpenNiController::resetAllSkeletons()
     }
 }
 
-boost::shared_array<unsigned char> OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type, bool waitAndBlock, const uint8_t userId )
-{
-    checkDeviceRunning( deviceID );
 
-    bool colorUserImage = false;
-    //refreshing user data
-    //boost::shared_ptr< OpenNIDevice > device = m_Devices[deviceID];
-    OpenNiDevice device = m_DeviceList[ deviceID ];
-    switch( type )
-    {
-    case COLORIMAGE:
-        if ( !device.hasProductionGraph( XN_NODE_TYPE_IMAGE)  )
-        {
-            _2REAL_LOG(warn) << "_2Real: getImageData() color generator is not activated! Cannot fetch image..." << std::endl;
-            return boost::shared_array<unsigned char>();
-        }
-        //fetching new image data
-        std::cout << " image data requested" << std::endl;
-        return device.getBuffer( XN_NODE_TYPE_IMAGE );
-        break;
-    case DEPTHIMAGE:
-        if( !device.hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
-        {
-            _2REAL_LOG(warn) << "_2Real: getImageData() depth generator is not activated! Cannot fetch image..." << std::endl;
-            return boost::shared_array<unsigned char>();
-        }
-        //std::cout << " depth data requested" << std::endl;
-        return device.getBuffer( XN_NODE_TYPE_DEPTH );
-        break;
-    case INFRAREDIMAGE:
-        if( !device.hasProductionGraph( XN_NODE_TYPE_IR ) )
-        {
-            _2REAL_LOG(warn) << "_2Real: getImageData() infrared generator is not activated! Cannot fetch image..." << std::endl;
-            return boost::shared_array<unsigned char>();
-        }
-        std::cout << " ir data requested" << std::endl;
-        return device.getBuffer( XN_NODE_TYPE_IR );
-        break;
-    case USERIMAGE_COLORED:
-        colorUserImage = true;
-        break;
-    case USERIMAGE:
-        return boost::shared_array<unsigned char>();
-//         {
-//             if( !device.hasProductionGraph( XN_NODE_TYPE_USER )
-//             {
-//                 _2REAL_LOG(warn) << "_2Real: getImageData() user generator is not activated! Cannot fetch image..." << std::endl;
-//                 return boost::shared_array<unsigned char>();
-//             }
-//             if( colorUserImage )
-//                 return device->getUserColorImageBuffer();
-//             else
-//                 return device->getUserImageBuffer();
-//         }
-        break;
-    default:
-        throwError( "_2Real: getImageData() Error: Wrong type of generator assigned?!" );
-    }
-    return boost::shared_array<unsigned char>();
-}
-
-// boost::shared_array<uint16_t> OpenNiController::getImageDataDepth16Bit( const uint32_t deviceID, bool waitAndBlock/*=false */ )
-// {
-//     checkDeviceRunning(deviceID);
-//     if( !m_Devices[deviceID]->GetOpenNIDepthGenerator().IsValid() )
-//     {
-//         _2REAL_LOG(warn) << "_2Real: getDepthImageData16Bit() depth generator is not activated! Cannot fetch image..." << std::endl;
-//         return boost::shared_array<uint16_t>();
-//     }
-// 
-//     return m_Devices[deviceID]->getDepthBuffer_16bit();
-// }
