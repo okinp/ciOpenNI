@@ -28,19 +28,19 @@ void OpenNiController::initializeController()
         OpenNiDevice::checkError( m_Context.Init(), "\n_Couldn't  Initialize devices" );
         OpenNiDevice::checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
 
-         xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
-         for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
-         {
-             NodeInfoRef devInfo = NodeInfoRef( new xn::NodeInfo( *deviceIter ) );
-             OpenNiDevice dev( m_Context, devInfo);
-             m_DeviceList.push_back( dev );
-             dev.addDeviceToContext();
-             m_NumberOfDevices+=1;
-         }
-         _2REAL_LOG(info) << "\n_2Real: Found and init " << (int)m_NumberOfDevices << " device[s]" << std::endl;
-     }
+        xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
+        for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
+        {
+            NodeInfoRef devInfo = NodeInfoRef( new xn::NodeInfo( *deviceIter ) );
+            OpenNiDevice dev( m_Context, devInfo);
+            m_DeviceList.push_back( dev );
+            dev.addDeviceToContext();
+            m_NumberOfDevices+=1;
+        }
+        _2REAL_LOG(info) << "\n_2Real: Found and init " << (int)m_NumberOfDevices << " device[s]" << std::endl;
+    }
 }
-// NO
+
 void OpenNiController::addDeviceToContext( const size_t &deviceIdx )
 {
     if ( deviceIdx < m_NumberOfDevices )
@@ -50,36 +50,89 @@ void OpenNiController::addDeviceToContext( const size_t &deviceIdx )
         throwError("Device index out of range");
     }
 }
-// YES
-bool OpenNiController::start( size_t deviceIdx, boost::uint32_t startGenerators, boost::uint32_t configureImages )
+
+bool OpenNiController::start( size_t deviceIdx, uint32_t startGenerators, uint32_t configureImages )
 {
     checkDeviceRunning( deviceIdx );
-    if( startGenerators & COLORIMAGE )
+    m_GeneratorConfig = startGenerators;
+    m_ImageConfig     = configureImages;
+    
+    std::vector<XnPredefinedProductionNodeType> requestedNodes =  getXnPredefinedProductionNodeTypes( m_GeneratorConfig );
+    for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
     {
-        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_IMAGE, configureImages );
-        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_IMAGE, configureImages );
-    }
-    if( startGenerators & DEPTHIMAGE )
-    {
-        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_DEPTH, configureImages );
-        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_DEPTH, configureImages );
-    }
-
-    if( ( m_GeneratorConfig & COLORIMAGE ) && ( m_GeneratorConfig & INFRAREDIMAGE ) )
-        _2REAL_LOG(warn) << "_2Real: Cannot start color and infrared generator at same time!" << std::endl;
-
-    if( !( m_GeneratorConfig & COLORIMAGE ) && m_GeneratorConfig & INFRAREDIMAGE )
-    {
-        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_IR, configureImages );
-        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_IR, configureImages );
-    }
-    if( m_GeneratorConfig & USERIMAGE || m_GeneratorConfig & USERIMAGE_COLORED )
-    {
-        m_DeviceList[ deviceIdx ].addProductionGraph( XN_NODE_TYPE_USER, configureImages );
-        //XnMapOutputMode mode = m_DeviceList[ deviceIdx ].getRequestedOutputMode( XN_NODE_TYPE_USER, configureImages );
+        m_DeviceList[ deviceIdx ].addProductionGraph( *iter, m_ImageConfig );
     }
     return true;
 }
+
+bool OpenNiController::startGenerator( size_t deviceIdx, uint32_t startGenerator )
+{
+    checkDeviceRunning( deviceIdx );
+    //Check if generator exists
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getXnPredefinedProductionNodeTypes( startGenerator );
+    std::cout << "The number of generators that were requested to start is: " << requestedNodes.size() << std::endl;
+    
+    if ( requestedNodes.size() == 0 ) 
+    {
+        return false;
+    }
+    
+    for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
+    {
+        m_DeviceList[ deviceIdx ].startGenerator(*iter);
+    }
+}
+
+bool OpenNiController::stopGenerator( size_t deviceIdx, uint32_t stopGenerator )
+{
+    checkDeviceRunning( deviceIdx );
+    //Check if generator exists
+    std::vector<XnPredefinedProductionNodeType> requestedNodes = getXnPredefinedProductionNodeTypes( stopGenerator );
+    
+    if ( requestedNodes.size() == 0 ) 
+    {
+        return false;
+    }
+    
+    for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
+    {
+        m_DeviceList[ deviceIdx ].stopGenerator(*iter);
+    }
+}
+
+std::vector<XnPredefinedProductionNodeType> OpenNiController::getXnPredefinedProductionNodeTypes( uint32_t startGenerators )
+{
+    std::vector<XnPredefinedProductionNodeType> XnRequestedNodeSet;
+    
+    if(  ( m_GeneratorConfig & COLORIMAGE )  &&  ( m_GeneratorConfig & INFRAREDIMAGE )  )
+    {
+        _2REAL_LOG(warn) << "_2Real: Cannot start color and infrared generator at same time!" << std::endl;
+    }
+    
+    
+    if( m_GeneratorConfig & COLORIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IMAGE );
+    }
+    
+    if( m_GeneratorConfig & DEPTHIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_DEPTH );
+    }
+    
+    if( !( m_GeneratorConfig & COLORIMAGE ) && m_GeneratorConfig & INFRAREDIMAGE )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_IR );
+    }
+    
+    if( m_GeneratorConfig & USERIMAGE || m_GeneratorConfig & USERIMAGE_COLORED )
+    {
+        XnRequestedNodeSet.push_back( XN_NODE_TYPE_USER );
+    }
+    
+    return XnRequestedNodeSet;
+}
+
 xn::Context& OpenNiController::getContext()
 {
     return m_Context;

@@ -51,14 +51,14 @@ void OpenNiDevice::addProductionGraph( const XnPredefinedProductionNodeType &nod
 
 //         
 //         //
-//         if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
-//         {
-//             std::cout << "Addding something" << std::endl;
-//             XnMapOutputMode mode = getRequestedOutputMode( nodeType, IMAGE_CONFIG_DEFAULT );
-//             //setting output mode
-//             xn::MapGenerator *mGen = static_cast<xn::MapGenerator*>( (gen.first).get() );
-//             checkError( mGen->SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
-//         }
+         if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
+         {
+             std::cout << "Addding something" << std::endl;
+             XnMapOutputMode mode = getRequestedOutputMode( nodeType, IMAGE_CONFIG_DEFAULT );
+             //setting output mode
+             xn::MapGenerator *mGen = static_cast<xn::MapGenerator*>( (gen.first).get() );
+             checkError( mGen->SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
+         }
     }
 }
 
@@ -126,27 +126,26 @@ void OpenNiDevice::addGeneratorGraphs( boost::uint32_t startGenerators, boost::u
     }
 }   
 
-
 void OpenNiDevice::startGenerator( const XnPredefinedProductionNodeType &nodeType )
 {
-//    GeneratorInfoPair genInfo = getExistingGeneratorInfoPairForNodeType( nodeType );
-//    if ( genInfo.second != XN_NODE_TYPE_INVALID )
-//    {
-//        std::cout << "Invalid Generator Requested"  <<  std::endl;
-//        return;
-//    }
-//    genInfo.first->StartGenerating();
+    GeneratorInfoPair genInfo = getExistingGeneratorInfoPair( nodeType );
+    if ( genInfo.second == XN_NODE_TYPE_INVALID )
+    {
+        std::cout << "Generator requested to start is invalid / doesn't exist"  <<  std::endl;
+        return;
+    }
+    genInfo.first->StartGenerating();
 }
 
 void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType )
 {
- //   GeneratorInfoPair genInfo = getExistingGeneratorInfoPairForNodeType( nodeType );
- //   if ( genInfo.second != XN_NODE_TYPE_INVALID )
- //   {
- //       std::cout << "Generator requested is either invalid or doesn't exist"  <<  std::endl;
- //       return;
- //   }
- //   genInfo.first->StopGenerating();
+   GeneratorInfoPair genInfo = getExistingGeneratorInfoPair( nodeType );
+   if ( genInfo.second == XN_NODE_TYPE_INVALID )
+   {
+       std::cout << "Generator requested to stop is invalid / doesn't exist"  <<  std::endl;
+       return;
+   }
+   genInfo.first->StopGenerating();
 }
 
 void OpenNiDevice::removeGenerator( const XnPredefinedProductionNodeType &nodeType )
@@ -259,6 +258,7 @@ XnMapOutputMode OpenNiDevice::getRequestedOutputMode( const XnPredefinedProducti
 
        throwError(" Requested node type does not support an output mode ");
    }
+    mode.nFPS = 30;
    return mode;
 }
 
@@ -329,7 +329,7 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IMAGE );
         xn::Generator generator  = *(gen.first);
         xn::ImageGenerator img = static_cast< xn::ImageGenerator >( generator );
-        ImageMetaData imgMeta;
+        xn::ImageMetaData imgMeta;
         img.GetMetaData( imgMeta );
         int xres = imgMeta.FullXRes();
         int yres = imgMeta.FullYRes();
@@ -339,7 +339,7 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
     else if ( nodeType == XN_NODE_TYPE_DEPTH && hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
     {
         boost::shared_array<uint16_t> buffer16 = getBuffer16(XN_NODE_TYPE_DEPTH );
-        boost::shared_array<unsigned char>
+        boost::shared_array<unsigned char> buffer( new unsigned char[640*480], null_deleter() );
         convertImage_16_to_8(buffer16, buffer, 640*480, _2REAL_OPENNI_DEPTH_NORMALIZATION_16_TO_8 );
         //buffer = boost::shared_array< unsigned char>( (unsigned char*) depth.GetDepthMap(), null_deleter()); 
     } 
@@ -373,7 +373,9 @@ boost::shared_array<uint16_t> OpenNiDevice::getBuffer16( const XnPredefinedProdu
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_DEPTH );
         xn::Generator generator = *(gen.first);
         xn::DepthGenerator depth = static_cast< xn::DepthGenerator >( generator );
-        buffer = boost::shared_array< uint16_t >( (uint16_t*) depth.GetDepthMap(), null_deleter());
+        xn::DepthMetaData g_depthMD;
+        depth.GetMetaData( g_depthMD );
+        buffer = boost::shared_array< uint16_t >( (uint16_t*) g_depthMD.Data(), null_deleter());
     }
     else if ( nodeType == XN_NODE_TYPE_IR && hasProductionGraph( XN_NODE_TYPE_IR ) )
     {

@@ -36,6 +36,7 @@ class OpenNiDevice
 
     void startGenerator( const XnPredefinedProductionNodeType &nodeType );
     void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
+    
     void removeGenerator( const XnPredefinedProductionNodeType &nodeType );
 
     bool hasNewData();
