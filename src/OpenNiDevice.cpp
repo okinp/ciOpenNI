@@ -3,7 +3,6 @@
 #include "_2RealTypes.h"
 
 
-
 using namespace  _2RealKinectWrapper;
 
 struct the_null_deleter
@@ -13,7 +12,6 @@ struct the_null_deleter
         
     }
 };
-
 
 OpenNiDevice::OpenNiDevice()
     :m_Context( xn::Context() ),
@@ -366,9 +364,16 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
     } 
     else if ( nodeType == XN_NODE_TYPE_USER && hasProductionGraph( XN_NODE_TYPE_USER ) )
     {
-        GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
-        //xn::UserGenerator user = static_cast< xn::UserGenerator >( gen );
-        //buffer = boost::shared_array< unsigned char>( (unsigned char*) user.GetUserMap() );
+//        boost::shared_array<uint16_t> buffer16 = getBuffer16(XN_NODE_TYPE_DEPTH );
+//        buffer = boost::shared_array<unsigned char>( new unsigned char[640*480] );
+//        convertImage_16_to_8(buffer16, buffer, 640*480, 1 );
+        
+        GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_USER );
+        xn::Generator generator  = *(gen.first);
+        xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
+        xn::SceneMetaData sceneMeta ;
+        user.GetUserPixels( 0, sceneMeta );
+        buffer = boost::shared_array< unsigned char>( (unsigned char*) sceneMeta.Data(), the_null_deleter() );
     } 
     else 
     {
@@ -396,11 +401,19 @@ boost::shared_array<uint16_t> OpenNiDevice::getBuffer16( const XnPredefinedProdu
         GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_IR );
         xn::Generator generator  = *(gen.first);
         xn::IRGenerator ir = static_cast< xn::IRGenerator >( generator );
-        buffer = boost::shared_array< uint16_t >( (uint16_t*) ir.GetIRMap());
+        buffer = boost::shared_array< uint16_t >( (uint16_t*) ir.GetIRMap(), the_null_deleter() );
     }
+//    else if ( nodeType == XN_NODE_TYPE_USER && hasProductionGraph( XN_NODE_TYPE_USER ) )
+//    {
+//        GeneratorInfoPair gen = getExistingGeneratorInfoPair( XN_NODE_TYPE_USER );
+//        xn::Generator generator  = *(gen.first);
+//        xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
+//        xn::SceneMetaData sceneMeta ;
+//        user.GetUserPixels( 0, sceneMeta );
+//        buffer = boost::shared_array< uint16_t >( (uint16_t*) sceneMeta.Data(), the_null_deleter() ); 
+//    }
     else 
     {
-
         throwError("_2Real: Requested node type does not produce 16bit image data or doesn't exist ");
     }
     return  buffer;

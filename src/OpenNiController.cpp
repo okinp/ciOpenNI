@@ -237,6 +237,21 @@ bool OpenNiController::isMirrored( const uint32_t deviceIdx, _2RealGenerator typ
     return flag;
 }
 
+size_t OpenNiController::getNumberOfUsers( const size_t deviceIdx )
+{
+    checkDeviceRunning( deviceIdx );
+    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_USER ) )
+    {
+        _2REAL_LOG(warn) << "_2Real: Cannot get number of users. User generator is not active..." << std::endl;
+        return 0;
+    }
+    GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_USER );
+    xn::Generator generator  = *(gen.first);
+    xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
+    return user.GetNumberOfUsers();
+    
+}
+
 boost::shared_array<unsigned char> OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type )
 {
     checkDeviceRunning( deviceID );

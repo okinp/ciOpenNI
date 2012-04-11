@@ -41,7 +41,8 @@ public:
     virtual const bool isNewData(const uint32_t deviceID, _2RealGenerator type);
     virtual void resetSkeleton( const uint32_t deviceID, const uint32_t id );
     virtual void resetAllSkeletons();
-
+    
+    size_t getNumberOfUsers( const size_t deviceIdx );
     
     
     virtual boost::shared_array<unsigned char> getImageData( const uint32_t deviceID, _2RealGenerator type );

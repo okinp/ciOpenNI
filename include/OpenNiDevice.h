@@ -50,6 +50,8 @@ class OpenNiDevice
     GeneratorInfoPair getExistingGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType );
     GeneratorInfoPair getEmptyGeneratorInfoPair( const XnPredefinedProductionNodeType &nodeType ); 
     
+   // GeneratorRef getG
+    
     std::vector< GeneratorInfoPair > m_GeneratorPairs;
 
     XnMapOutputMode getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, boost::uint32_t configureImages );
