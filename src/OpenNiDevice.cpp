@@ -345,8 +345,8 @@ boost::shared_array<unsigned char> OpenNiDevice::getBuffer( const XnPredefinedPr
         img.GetMetaData( imgMeta );
         int xres = imgMeta.FullXRes();
         int yres = imgMeta.FullYRes();
-        buffer = boost::shared_array<unsigned char >( new unsigned char[ xres * yres ]);
-        //buffer = boost::shared_array< unsigned char>( (unsigned char*) img.GetImageMap(), the_null_deleter()); 
+        //buffer = boost::shared_array<unsigned char >( new unsigned char[ xres * yres ]);
+        buffer = boost::shared_array< unsigned char>( (unsigned char*) img.GetImageMap(), the_null_deleter()); 
     }
     else if ( nodeType == XN_NODE_TYPE_DEPTH && hasProductionGraph( XN_NODE_TYPE_DEPTH ) )
     {
