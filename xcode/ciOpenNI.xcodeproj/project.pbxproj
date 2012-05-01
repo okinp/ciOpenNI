@@ -46,6 +46,7 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* ciOpenNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ciOpenNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E3081AF1534C15200CFE728 /* _2RealImageSource.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = _2RealImageSource.hpp; path = ../src/_2RealImageSource.hpp; sourceTree = "<group>"; };
+		8E901EDD1537135F004F680D /* ciOpenNiUtils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ciOpenNiUtils.hpp; sourceTree = "<group>"; };
 		9E0A3914152065DD002AD009 /* _2RealLogger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = _2RealLogger.cpp; path = ../src/_2RealLogger.cpp; sourceTree = "<group>"; };
 		9E0A3915152065DD002AD009 /* _2RealTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = _2RealTypes.cpp; path = ../src/_2RealTypes.cpp; sourceTree = "<group>"; };
 		9E0A3916152065DD002AD009 /* _2RealVector2f.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = _2RealVector2f.cpp; path = ../src/_2RealVector2f.cpp; sourceTree = "<group>"; };
@@ -91,6 +92,7 @@
 				9E0A3918152065DD002AD009 /* OpenNiDevice.cpp */,
 				9E0A3917152065DD002AD009 /* OpenNiController.cpp */,
 				00BAE6590E7ED9C10018A608 /* ciOpenNIApp.cpp */,
+				8E901EDD1537135F004F680D /* ciOpenNiUtils.hpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -150,8 +152,8 @@
 				9E0A39241521BA65002AD009 /* _2RealUtility.hpp */,
 				9E0A39251521BA65002AD009 /* _2RealVector2f.h */,
 				9E0A39261521BA65002AD009 /* OpenNiController.h */,
-				9E0A39271521BA65002AD009 /* OpenNiDevice.h */,
 				9E0A39281521BA65002AD009 /* Resources.h */,
+				9E0A39271521BA65002AD009 /* OpenNiDevice.h */,
 				32CA4F630368D1EE00C91783 /* ciOpenNI_Prefix.pch */,
 			);
 			name = Headers;

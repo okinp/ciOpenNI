@@ -1,6 +1,7 @@
 #include "OpenNiController.h"
 #include "_2RealUtility.hpp"
 #include "_2RealImageSource.hpp"
+#include "ciOpenNiUtils.hpp"
 
 #define _2REAL_NUMBER_OF_JOINTS 24
 
@@ -11,7 +12,7 @@ OpenNiController::OpenNiController()
      m_ImageConfig( IMAGE_CONFIG_DEFAULT )
 
 {
-
+    
 }
 
 OpenNiController::~OpenNiController()
@@ -25,8 +26,8 @@ void OpenNiController::initializeController()
     {
         m_IsInitialized = true;
         
-        OpenNiDevice::checkError( m_Context.Init(), "\n_Couldn't  Initialize devices" );
-        OpenNiDevice::checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
+        checkError( m_Context.Init(), "\n_Couldn't  Initialize context" );
+        checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
 
         xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
         for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
@@ -51,7 +52,7 @@ bool OpenNiController::start( size_t deviceIdx, uint32_t startGenerators, uint32
     std::vector<XnPredefinedProductionNodeType> requestedNodes =  getRequestedNodes( m_GeneratorConfig );
     for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
     {
-        m_DeviceList[ deviceIdx ].addProductionGraph( *iter, m_ImageConfig );
+        m_DeviceList[ deviceIdx ].addGenerator( *iter, m_ImageConfig );
     }
     return true;
 }
@@ -104,7 +105,7 @@ size_t const& OpenNiController::getNumberOfConnectedDevices()
     return m_NumberOfDevices;
 }
 
-std::vector<XnPredefinedProductionNodeType> OpenNiController::getRequestedNodes( uint32_t startGenerators )
+std::vector<XnPredefinedProductionNodeType> OpenNiController::getRequestedNodes( uint32_t startGenerators ) const
 {
     std::vector<XnPredefinedProductionNodeType> XnRequestedNodeSet;
     
@@ -197,14 +198,13 @@ void OpenNiController::setMirrored( const uint32_t deviceIdx, _2RealGenerator ty
     if ( requestedNodes[0] == XN_NODE_TYPE_USER )
         return;
     
-    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( requestedNodes[0] ) )
+    if( !m_DeviceList[ deviceIdx ].hasGenerator( requestedNodes[0] ) )
     {
         _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due to non activated generator..." << std::endl;
         return;
     }
-    GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( requestedNodes[0] );
-    OpenNiDevice::checkError( (gen.first)->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for image\n" );
-    
+    GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
+    checkError( gen->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for image\n" );
 }
 
 
@@ -223,7 +223,7 @@ bool OpenNiController::isMirrored( const uint32_t deviceIdx, _2RealGenerator typ
     } 
     
     
-    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( requestedNodes[0] ) )
+    if( !m_DeviceList[ deviceIdx ].hasGenerator( requestedNodes[0] ) )
     {
         _2REAL_LOG(warn) << "_2Real: Cannot check mirror capability due to non activated generator..." << std::endl;
         return false;
@@ -231,28 +231,27 @@ bool OpenNiController::isMirrored( const uint32_t deviceIdx, _2RealGenerator typ
     
     if ( requestedNodes[0] != XN_NODE_TYPE_USER )
     {
-        GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( requestedNodes[0] );
-        flag = (gen.first)->GetMirrorCap().IsMirrored();
+        GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
+        flag = gen->GetMirrorCap().IsMirrored();
     }
     return flag;
 }
 
-size_t OpenNiController::getNumberOfUsers( const size_t deviceIdx )
+size_t const OpenNiController::getNumberOfUsers( const size_t deviceIdx ) const
 {
     checkDeviceRunning( deviceIdx );
-    if( !m_DeviceList[ deviceIdx ].hasProductionGraph( XN_NODE_TYPE_USER ) )
+    if( !m_DeviceList[ deviceIdx ].hasGenerator( XN_NODE_TYPE_USER ) )
     {
         _2REAL_LOG(warn) << "_2Real: Cannot get number of users. User generator is not active..." << std::endl;
         return 0;
     }
-    GeneratorInfoPair gen = m_DeviceList[ deviceIdx ].getExistingGeneratorInfoPair( XN_NODE_TYPE_USER );
-    xn::Generator generator  = *(gen.first);
+    GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( XN_NODE_TYPE_USER );
+    xn::Generator generator  = *gen;
     xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
     return user.GetNumberOfUsers();
-    
 }
 
-boost::shared_array<unsigned char> OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type )
+ImageDataRef OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type ) const
 {
     checkDeviceRunning( deviceID );
     
@@ -269,7 +268,7 @@ boost::shared_array<unsigned char> OpenNiController::getImageData( const uint32_
         throwError( "_2Real:: getImageData() Error: WTF!");
     }
     
-    if ( !device.hasProductionGraph( requestedNodes[0] )  )
+    if ( !device.hasGenerator( requestedNodes[0] )  )
     {
         _2REAL_LOG(warn) << "_2Real: getImageData()  Generator is not activated! Cannot fetch image..." << std::endl;
         return boost::shared_array<unsigned char>(); //NULL shared array
