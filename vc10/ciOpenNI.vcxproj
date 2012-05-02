@@ -111,6 +111,7 @@
     <ClInclude Include="..\include\_2RealTypes.h" />
     <ClInclude Include="..\include\_2RealUtility.hpp" />
     <ClInclude Include="..\include\_2RealVector2f.h" />
+    <ClInclude Include="..\src\ciOpenNiUtils.hpp" />
     <ClInclude Include="..\src\_2RealImageSource.hpp" />
   </ItemGroup>
   <ItemGroup>

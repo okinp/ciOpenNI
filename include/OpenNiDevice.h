@@ -7,6 +7,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
+#include <memory>
 
 
 
@@ -26,22 +27,19 @@ class OpenNiDevice
 {
  public:
     OpenNiDevice();
-    OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo );
+	OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::string deviceName );
     
     void addDeviceToContext();
         
     void addGenerator( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages );
     void removeGenerator( const XnPredefinedProductionNodeType &nodeType );
     bool hasGenerator( const XnPredefinedProductionNodeType &nodeType ) const;
+	void startGenerator( const XnPredefinedProductionNodeType &nodeType );
+	void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
     
-    GeneratorRef getExistingGenerator( const XnPredefinedProductionNodeType &nodeType ) const;
-    
-    void startGenerator( const XnPredefinedProductionNodeType &nodeType );
-    void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
-    
-    
+	void getExistingProductionNode( const XnPredefinedProductionNodeType &nodeType, xn::ProductionNode& productionNode );
 
-    bool hasNewData();
+    bool hasNewData( const XnPredefinedProductionNodeType &nodeType );
     
     ImageDataRef       getBuffer( const XnPredefinedProductionNodeType &nodeType );
     ImageData16Ref     getBuffer16( const XnPredefinedProductionNodeType &nodeType );
@@ -50,15 +48,10 @@ class OpenNiDevice
     xn::NodeInfoList getNodeInfoList( const XnPredefinedProductionNodeType &nodeType  );
         
 private:
-    
     mutable xn::Context m_Context;
-    NodeInfoRef m_DeviceInfo;
+    std::string m_DeviceName;
+	NodeInfoRef m_DeviceInfo;
+	std::string xnNodeTypeToString( const XnPredefinedProductionNodeType& nodeType );
     void convertImage_16_to_8( const boost::shared_array<uint16_t> source, boost::shared_array<unsigned char> destination, uint32_t size, const int normalizing );
-    
-    void setGeneratorType( GeneratorRef generator ,XnPredefinedProductionNodeType nodeType );
-    bool generatorIsOfType( GeneratorRef generator, XnPredefinedProductionNodeType nodeType );
-    
-    int xnNodeTypeToInt( XnPredefinedProductionNodeType nodeType );
-    XnPredefinedProductionNodeType intToXnNodeType( int nodeType );
     XnMapOutputMode getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages );
 };

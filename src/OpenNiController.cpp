@@ -1,4 +1,5 @@
 #include "OpenNiController.h"
+#include <sstream>
 #include "_2RealUtility.hpp"
 #include "_2RealImageSource.hpp"
 #include "ciOpenNiUtils.hpp"
@@ -30,10 +31,14 @@ void OpenNiController::initializeController()
         checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
 
         xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
+		int count = 0;
+
         for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
         {
+			std::stringstream deviceName;
+			deviceName << "Device_" << count;
             NodeInfoRef devInfo = NodeInfoRef( new xn::NodeInfo( *deviceIter ) );
-            OpenNiDevice dev( m_Context, devInfo);
+            OpenNiDevice dev( m_Context, devInfo,deviceName.str() );
             m_DeviceList.push_back( dev );
             dev.addDeviceToContext();
             m_NumberOfDevices+=1;
@@ -203,8 +208,8 @@ void OpenNiController::setMirrored( const uint32_t deviceIdx, _2RealGenerator ty
         _2REAL_LOG(warn) << "_2Real: Cannot set mirror capability due to non activated generator..." << std::endl;
         return;
     }
-    GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
-    checkError( gen->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for image\n" );
+    //GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
+    //checkError( gen->GetMirrorCap().SetMirror( flag ), "Error when trying to set mirroring for image\n" );
 }
 
 
@@ -231,8 +236,8 @@ bool OpenNiController::isMirrored( const uint32_t deviceIdx, _2RealGenerator typ
     
     if ( requestedNodes[0] != XN_NODE_TYPE_USER )
     {
-        GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
-        flag = gen->GetMirrorCap().IsMirrored();
+       // GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( requestedNodes[0] );
+       // flag = gen->GetMirrorCap().IsMirrored();
     }
     return flag;
 }
@@ -245,10 +250,11 @@ size_t const OpenNiController::getNumberOfUsers( const size_t deviceIdx ) const
         _2REAL_LOG(warn) << "_2Real: Cannot get number of users. User generator is not active..." << std::endl;
         return 0;
     }
-    GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( XN_NODE_TYPE_USER );
-    xn::Generator generator  = *gen;
-    xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
-    return user.GetNumberOfUsers();
+//    GeneratorRef gen = m_DeviceList[ deviceIdx ].getExistingGenerator( XN_NODE_TYPE_USER );
+ //   xn::Generator generator  = *gen;
+  //  xn::UserGenerator user = static_cast< xn::UserGenerator >( generator );
+  //  return user.GetNumberOfUsers();
+	return 0;
 }
 
 ImageDataRef OpenNiController::getImageData( const uint32_t deviceID, _2RealGenerator type ) const
@@ -315,8 +321,9 @@ bool OpenNiController::isJointAvailable( _2RealJointType type ) const
 
 const bool OpenNiController::isNewData( const uint32_t deviceID, _2RealGenerator type )
 {
-    checkDeviceRunning( deviceID );
-    return m_DeviceList[ deviceID ].hasNewData( );
+//    checkDeviceRunning( deviceID );
+//    return m_DeviceList[ deviceID ].hasNewData( );
+	return true;
 }
 
 void OpenNiController::resetSkeleton( const uint32_t deviceID, const uint32_t id )
