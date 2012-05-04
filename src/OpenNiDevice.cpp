@@ -23,9 +23,9 @@ OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::s
 
 void OpenNiDevice::addDeviceToContext()
 {
-	//m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
 	xn::Device device;
 	checkError( m_Context.CreateProductionTree( *m_DeviceInfo, device ), " Error when creating production tree for device" );
+	//m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
 }
 
 void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages )

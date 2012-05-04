@@ -38,4 +38,3 @@ namespace _2RealKinectWrapper
 		throw( _2RealException(strError) );
 	}
 }
-

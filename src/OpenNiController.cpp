@@ -30,18 +30,16 @@ void OpenNiController::initializeController()
 		checkError( m_Context.EnumerateProductionTrees( XN_NODE_TYPE_DEVICE, NULL, m_DeviceInfo, NULL ), "Error when enumerating devices" );
 
 		xn::NodeInfoList::Iterator deviceIter = m_DeviceInfo.Begin();
-		int count = 0;
 
 		for ( ; deviceIter!=m_DeviceInfo.End(); ++deviceIter )
 		{
 			std::stringstream deviceName;
-			deviceName << "Device_" << count;
+			deviceName << "Device_" << m_NumberOfDevices;
 			NodeInfoRef devInfo = NodeInfoRef( new xn::NodeInfo( *deviceIter ) );
 			OpenNiDevice dev( m_Context, devInfo,deviceName.str() );
 			m_DeviceList.push_back( dev );
 			dev.addDeviceToContext();
 			m_NumberOfDevices+=1;
-			count++;
 		}
 		_2REAL_LOG(info) << "\n_2Real: Found and init " << (int)m_NumberOfDevices << " device[s]" << std::endl;
 	}
