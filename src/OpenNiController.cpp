@@ -54,18 +54,19 @@ void OpenNiController::configureDevice( size_t deviceIdx, uint32_t startGenerato
 	std::vector<XnPredefinedProductionNodeType> requestedNodes =  getRequestedNodes( m_GeneratorConfig );
 	for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
 	{
+        std::cout << "Requested type is: " << OpenNiDevice::xnNodeTypeToString(*iter) << std::endl; 
 		m_DeviceList[ deviceIdx ].addGenerator( *iter, m_ImageConfig );
 	}
 }
 
 void OpenNiController::startGenerator( size_t deviceIdx, uint32_t configureGenerators )
 {
-	setGeneratorState( deviceIdx, configureGenerators, true );
+    setGeneratorState( deviceIdx, configureGenerators, true );
 }
 
 void OpenNiController::stopGenerator( size_t deviceIdx, uint32_t configureGenerators )
 {
-   setGeneratorState( deviceIdx, configureGenerators, false );
+    setGeneratorState( deviceIdx, configureGenerators, false );
 }
 
 void OpenNiController::setGeneratorState( size_t deviceIdx, uint32_t requestedGenerator, bool start )
@@ -74,7 +75,7 @@ void OpenNiController::setGeneratorState( size_t deviceIdx, uint32_t requestedGe
 	//Check if generator exists
 	std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( requestedGenerator );
 	
-	if ( requestedNodes.size() == 0 ) 
+	if ( requestedNodes.empty() ) 
 	{
 		return;
 	}
@@ -86,7 +87,6 @@ void OpenNiController::setGeneratorState( size_t deviceIdx, uint32_t requestedGe
 		} else {
 			m_DeviceList[ deviceIdx ].stopGenerator(*iter);
 		}
-		
 	}
 }
 
@@ -185,7 +185,7 @@ void OpenNiController::setMirrored( const uint32_t deviceIdx, _2RealGenerator ty
 	checkDeviceIndex( deviceIdx );
 	std::vector<XnPredefinedProductionNodeType> requestedNodes = getRequestedNodes( type );
 	
-	if ( requestedNodes.size() == 0 )
+	if ( requestedNodes.empty() )
 	{
 		throwError( "_2Real::setMirrored() Error: wrong type of generator provided!");
 	} else if ( requestedNodes.size() > 1 ) {
@@ -262,7 +262,7 @@ ImageDataRef OpenNiController::getImageData( const uint32_t deviceID, _2RealGene
 	{
 		std::cout << "The size is: " << requestedNodes.size() << std::endl; 
 		throwError( "_2Real:: getImageData() Error: wrong type of generator provided!");
-	} else if ( requestedNodes.size() == 0 )
+	} else if ( requestedNodes.empty() )
 	{
 		throwError( "_2Real:: getImageData() Error: WTF!");
 	}

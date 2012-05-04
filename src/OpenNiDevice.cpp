@@ -10,7 +10,7 @@ OpenNiDevice::OpenNiDevice()
 	 m_DeviceInfo( NodeInfoRef() ),
 	 m_DeviceName("Device")
 {
-
+    
 }
 
 OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::string deviceName )
@@ -24,8 +24,9 @@ OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::s
 void OpenNiDevice::addDeviceToContext()
 {
 	xn::Device device;
+    m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
 	checkError( m_Context.CreateProductionTree( *m_DeviceInfo, device ), " Error when creating production tree for device" );
-	//m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
+    device.AddRef();
 }
 
 void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages )
@@ -35,30 +36,25 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
 		xn::NodeInfoList nodeList;
 		xn::Query query;
 		query.AddNeededNode( m_DeviceInfo->GetInstanceName() );
-		std::cout << m_DeviceInfo->GetInstanceName() << std::endl;
-		XnStatus retVal = m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL );
-		std::cout << "The return value is: "  << retVal << std::endl;
+		checkError( m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL ), "Error when enumerating production trees" );
+		if ( nodeList.IsEmpty() )
+		{
+            _2RealKinectWrapper::throwError("Requested NodeType is not supported by the device");
+		}
+		xn::NodeInfo node = *nodeList.Begin();
+		//Give a name to the generator
+		std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
+		node.SetInstanceName( nodeName.c_str() );
 
-		//checkError( m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL ), "Error when enumerating production trees" );
-		//if ( nodeList.IsEmpty() )
-		//{
-		//	_2RealKinectWrapper::throwError("Requested NodeType is not supported by the device");
-		//}
-		//xn::NodeInfo node = *nodeList.Begin();
-		////Give a name to the generator
-		//std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
-		//node.SetInstanceName( nodeName.c_str() );
-
-		//xn::Generator gen;
-		//checkError( m_Context.CreateProductionTree( node, gen ), "Error while creating production tree." );
-		//
-		//if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
-		//{ 
-		//	XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
-		//	xn::MapGenerator mapGenerator;
-		//	getExistingProductionNode( nodeType, mapGenerator );
-		//	checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
-		//}
+		xn::Generator gen;
+		checkError( m_Context.CreateProductionTree( node, gen ), "Error while creating production tree." );
+		if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
+		{ 
+            XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
+            xn::MapGenerator mapGenerator;
+            getExistingProductionNode( nodeType, mapGenerator );
+            checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
+		}
 	}
 }
 
@@ -231,10 +227,7 @@ XnMapOutputMode OpenNiDevice::getRequestedOutputMode( const XnPredefinedProducti
 
 void OpenNiDevice::getExistingProductionNode( const XnPredefinedProductionNodeType &nodeType, xn::ProductionNode& productionNode )
 {
-	std::string s1 = xnNodeTypeToString( nodeType );
-	std::string s2 = "_";
-	std::string nodeName = s1 + s2 + m_DeviceName;
-	//std::string nodeName = "test";
+    std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
 	checkError( m_Context.GetProductionNodeByName(nodeName.c_str(), productionNode), " Requested production node has not been created" );
 }
 
@@ -257,8 +250,8 @@ ImageDataRef OpenNiDevice::getBuffer( const XnPredefinedProductionNodeType &node
 		getExistingProductionNode(XN_NODE_TYPE_IMAGE, imageGenerator );
 		xn::ImageMetaData imgMeta;
 		imageGenerator.GetMetaData( imgMeta );
-		int xres = imgMeta.FullXRes();
-		int yres = imgMeta.FullYRes();
+		//int xres = imgMeta.FullXRes();
+		//int yres = imgMeta.FullYRes();
 		buffer = ImageDataRef( (unsigned char*) imageGenerator.GetImageMap(), the_null_deleter()); 
 	}
 	else if ( nodeType == XN_NODE_TYPE_DEPTH && hasGenerator( XN_NODE_TYPE_DEPTH ) )
