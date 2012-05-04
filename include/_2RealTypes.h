@@ -171,10 +171,10 @@ namespace _2RealKinectWrapper
 
 	class _2RealException : public std::exception
 	{
-	    std::string msg;
-	    public:
-	    _2RealException(const std::string& message) throw():std::exception(),msg(message){}
-	    ~_2RealException() throw(){}
-	    const char* what() const throw(){return msg.c_str();}
+		std::string msg;
+		public:
+		_2RealException(const std::string& message) throw():std::exception(),msg(message){}
+		~_2RealException() throw(){}
+		const char* what() const throw(){return msg.c_str();}
 	};
 }

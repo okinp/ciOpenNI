@@ -23,7 +23,7 @@ OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::s
 
 void OpenNiDevice::addDeviceToContext()
 {
-	m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
+	//m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
 	xn::Device device;
 	checkError( m_Context.CreateProductionTree( *m_DeviceInfo, device ), " Error when creating production tree for device" );
 }
@@ -36,28 +36,29 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
 		xn::Query query;
 		query.AddNeededNode( m_DeviceInfo->GetInstanceName() );
 		std::cout << m_DeviceInfo->GetInstanceName() << std::endl;
-		checkError( m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL ), "Error when enumerating production trees" );
+		XnStatus retVal = m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL );
+		std::cout << "The return value is: "  << retVal << std::endl;
 
-		if ( nodeList.IsEmpty() )
-		{
-			_2RealKinectWrapper::throwError("Requested NodeType is not supported by the device");
-		}
+		//checkError( m_Context.EnumerateProductionTrees( nodeType, &query, nodeList, NULL ), "Error when enumerating production trees" );
+		//if ( nodeList.IsEmpty() )
+		//{
+		//	_2RealKinectWrapper::throwError("Requested NodeType is not supported by the device");
+		//}
+		//xn::NodeInfo node = *nodeList.Begin();
+		////Give a name to the generator
+		//std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
+		//node.SetInstanceName( nodeName.c_str() );
 
-		xn::NodeInfo node = *nodeList.Begin();
-		//Give a name to the generator
-		std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
-		node.SetInstanceName( nodeName.c_str() );
-
-		xn::Generator gen;
-		checkError( m_Context.CreateProductionTree( node, gen ), "Error while creating production tree." );
-		
-		if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
-		{ 
-			XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
-			xn::MapGenerator mapGenerator;
-			getExistingProductionNode( nodeType, mapGenerator );
-			checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
-		 }
+		//xn::Generator gen;
+		//checkError( m_Context.CreateProductionTree( node, gen ), "Error while creating production tree." );
+		//
+		//if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
+		//{ 
+		//	XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
+		//	xn::MapGenerator mapGenerator;
+		//	getExistingProductionNode( nodeType, mapGenerator );
+		//	checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
+		//}
 	}
 }
 

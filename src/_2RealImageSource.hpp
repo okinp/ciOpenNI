@@ -30,9 +30,9 @@ namespace _2RealKinectWrapper		// this null deleter is needed so the shared poin
 {
 struct null_deleter
 {
-    void operator()(void const *) const
-    {
-    }
+	void operator()(void const *) const
+	{
+	}
 };
 
 template<typename T>
@@ -120,7 +120,7 @@ class _2RealImageSource
 		void setMirroring( const bool mirrored );
 		void setCropping( const bool cropped );
 
-        friend class OpenNIInfraredGenerator;
+		friend class OpenNIInfraredGenerator;
 		friend class OpenNIDepthGenerator;
 		friend class OpenNIColorGenerator;
 		friend class OpenNIUserGenerator;
