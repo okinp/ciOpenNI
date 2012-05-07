@@ -20,7 +20,7 @@ OpenNiController::~OpenNiController()
 	shutdown();
 }
 
-void OpenNiController::initializeController()
+void OpenNiController::initialize()
 {
 	if ( !m_IsInitialized )
 	{
@@ -54,7 +54,6 @@ void OpenNiController::configureDevice( size_t deviceIdx, uint32_t startGenerato
 	std::vector<XnPredefinedProductionNodeType> requestedNodes =  getRequestedNodes( m_GeneratorConfig );
 	for ( std::vector<XnPredefinedProductionNodeType>::iterator iter = requestedNodes.begin(); iter!=requestedNodes.end(); ++iter ) 
 	{
-        std::cout << "Requested type is: " << OpenNiDevice::xnNodeTypeToString(*iter) << std::endl; 
 		m_DeviceList[ deviceIdx ].addGenerator( *iter, m_ImageConfig );
 	}
 }
@@ -114,25 +113,31 @@ std::vector<XnPredefinedProductionNodeType> OpenNiController::getRequestedNodes(
 		_2REAL_LOG(warn) << "_2Real: Cannot have color and infrared generators at same time!" << std::endl;
 	}
 	
+
+
 	if( startGenerators & COLORIMAGE )
 	{
 		XnRequestedNodeSet.push_back( XN_NODE_TYPE_IMAGE );
 	}
 	
+
+
 	if( startGenerators & DEPTHIMAGE )
 	{
 		XnRequestedNodeSet.push_back( XN_NODE_TYPE_DEPTH );
-	}
-	
-	if( !( startGenerators & COLORIMAGE ) && startGenerators & INFRAREDIMAGE )
-	{
-		XnRequestedNodeSet.push_back( XN_NODE_TYPE_IR );
 	}
 	
 	if( startGenerators & USERIMAGE || startGenerators & USERIMAGE_COLORED )
 	{
 		XnRequestedNodeSet.push_back( XN_NODE_TYPE_USER );
 	}
+
+	if( !( startGenerators & COLORIMAGE ) && startGenerators & INFRAREDIMAGE )
+	{
+		XnRequestedNodeSet.push_back( XN_NODE_TYPE_IR );
+	}
+	
+
 	return XnRequestedNodeSet;
 }
 

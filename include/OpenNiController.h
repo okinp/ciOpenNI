@@ -25,7 +25,7 @@ public:
 	void allignDepthImageToColor( const size_t &deviceIdx );
 	void synchronizeImageAndDepthStreams( const size_t &deviceIdx );
 	
-	void initializeController();
+	void initialize();
 	bool const isInitialized();
 
 	void configureDevice( size_t deviceIdx, uint32_t startGenerators, uint32_t configureImages );
@@ -42,6 +42,11 @@ public:
 	size_t const getNumberOfUsers( const size_t deviceIdx ) const;
 	ImageDataRef getImageData( const uint32_t deviceID, _2RealGenerator type ) const;
 	
+//	void drawSkeleton( const uint32_t deviceIdx, size_t userId );
+//	void drawAllSkeletons( const uint32_t deviceIdx );
+//	void getSkeletonData( const uint32_t deviceIdx, size_t userId );
+//	ci::Vec3f getCenterOfMass( const uint32_t deviceIdx, size_t userId ) const;
+
 	void updateContext();
 	
 	OpenNiDevice& operator[]( const size_t deviceIdx );

@@ -10,7 +10,7 @@ OpenNiDevice::OpenNiDevice()
 	 m_DeviceInfo( NodeInfoRef() ),
 	 m_DeviceName("Device")
 {
-    
+
 }
 
 OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::string deviceName )
@@ -25,6 +25,12 @@ void OpenNiDevice::addDeviceToContext()
 {
 	xn::Device device;
     m_DeviceInfo->SetInstanceName( m_DeviceName.c_str() );
+	
+	//ToDo: There is a verified bug in the unstable version of OpenNi that prevents adding a user generator after a device.
+	// for more info see:  http://groups.google.com/group/openni-dev/browse_thread/thread/96331acca1ed7ce3?pli=1
+	//For this reason, we are not forcing the creation of a device node at start, but let it be handled by openni behind the scenes,
+	// when a production node of the device is requested.
+
 	checkError( m_Context.CreateProductionTree( *m_DeviceInfo, device ), " Error when creating production tree for device" );
     device.AddRef();
 }
@@ -33,6 +39,7 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
 {
 	if ( !hasGenerator( nodeType ) )
 	{
+		std::cout << "Adding generator for nodetype: " << xnNodeTypeToString(nodeType) << std::endl;
 		xn::NodeInfoList nodeList;
 		xn::Query query;
 		query.AddNeededNode( m_DeviceInfo->GetInstanceName() );
@@ -45,9 +52,10 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
 		//Give a name to the generator
 		std::string nodeName =  xnNodeTypeToString( nodeType ) + "_" + m_DeviceName;
 		node.SetInstanceName( nodeName.c_str() );
-
 		xn::Generator gen;
 		checkError( m_Context.CreateProductionTree( node, gen ), "Error while creating production tree." );
+		//ToDo: We shoud take care to release all the "AddRef's "
+		gen.AddRef();
 		if ( ( nodeType != XN_NODE_TYPE_DEVICE ) && ( nodeType != XN_NODE_TYPE_USER ) )
 		{ 
             XnMapOutputMode mode = getRequestedOutputMode( nodeType, configureImages );
@@ -55,6 +63,9 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
             getExistingProductionNode( nodeType, mapGenerator );
             checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
 		}
+	} else
+	{
+		std::cout << "Generator for nodetype: " << xnNodeTypeToString(nodeType) << " already exists." << std::endl;
 	}
 }
 
@@ -95,7 +106,13 @@ void OpenNiDevice::startGenerator( const XnPredefinedProductionNodeType &nodeTyp
 {
 	xn::Generator generator;
 	getExistingProductionNode( nodeType, generator );
-	generator.StartGenerating();
+	if ( !generator.IsGenerating() )
+	{
+		generator.StartGenerating();
+	} else 
+	{
+		std::cout << "Nodetype: " << xnNodeTypeToString(nodeType) << " is already generating." << std::endl;
+	}
 }
 
 void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType )
@@ -105,11 +122,15 @@ void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType
 	if ( generator.IsGenerating() )
 	{
 		generator.StopGenerating();
+	} else 
+	{
+		std::cout << "Nodetype: " << xnNodeTypeToString(nodeType) << " is not generating." << std::endl;
 	}
 }
 
 void OpenNiDevice::removeGenerator( const XnPredefinedProductionNodeType &nodeType )
 {
+	//ToDo: removeGenerator appears to not work. FixMe
 	xn::Generator generator;
 	getExistingProductionNode( nodeType, generator );
 	generator.Release();
@@ -313,6 +334,31 @@ void OpenNiDevice::convertImage_16_to_8( const ImageData16Ref source, ImageDataR
 		destination[i] = (unsigned char) ( source[i] * ( (float)( 1 << 8 ) / normalizing ) ); 	
 	}
 }
+
+void OpenNiDevice::convertRealWorldToProjective( XnUInt32 count, 		const XnPoint3D  	aRealWorld[], XnPoint3D  	aProjective[] )
+{
+	xn::DepthGenerator depthGen;
+	if ( !hasGenerator(XN_NODE_TYPE_DEPTH) )
+	{
+		//Lets create the depthGenerator
+	} else {
+		//Lets use the already existing one
+	}
+	depthGen.ConvertRealWorldToProjective(count, aRealWorld, aProjective );
+}
+
+void OpenNiDevice::convertProjectiveToRealWorld( XnUInt32 count, 		const XnPoint3D  	aProjective[], XnPoint3D  	aRealWorld[] )
+{
+	xn::DepthGenerator depthGen;
+	if ( !hasGenerator(XN_NODE_TYPE_DEPTH) )
+	{
+		//Lets create the depthGenerator
+	} else {
+		//Lets use the already existing one
+	}
+	depthGen.ConvertProjectiveToRealWorld(count, aProjective, aRealWorld );
+}
+
 
 std::string OpenNiDevice::xnNodeTypeToString( const XnPredefinedProductionNodeType& nodeType )
 {

@@ -27,9 +27,10 @@ class OpenNiDevice
 	OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::string deviceName );
 	
 	void addDeviceToContext();
-		
+
 	void addGenerator( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages );
 	void removeGenerator( const XnPredefinedProductionNodeType &nodeType );
+
 	bool hasGenerator( const XnPredefinedProductionNodeType &nodeType ) const;
 	void startGenerator( const XnPredefinedProductionNodeType &nodeType );
 	void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
@@ -38,6 +39,9 @@ class OpenNiDevice
 	
 	ImageDataRef       getBuffer( const XnPredefinedProductionNodeType &nodeType );
 	ImageData16Ref     getBuffer16( const XnPredefinedProductionNodeType &nodeType );
+
+	void convertRealWorldToProjective( XnUInt32 count, 		const XnPoint3D  	aRealWorld[], XnPoint3D  	aProjective[] );
+	void convertProjectiveToRealWorld( XnUInt32 count, 		const XnPoint3D  	aProjective[], XnPoint3D  	aRealWorld[] );
 
 	xn::NodeInfo     getNodeInfo();
 	xn::NodeInfoList getNodeInfoList( const XnPredefinedProductionNodeType &nodeType  );
@@ -48,8 +52,7 @@ private:
 	mutable xn::Context m_Context;
 	std::string m_DeviceName;
 	NodeInfoRef m_DeviceInfo;
-	
-	
+
 	void getExistingProductionNode( const XnPredefinedProductionNodeType &nodeType, xn::ProductionNode& productionNode );
 	void convertImage_16_to_8( const boost::shared_array<uint16_t> source, boost::shared_array<unsigned char> destination, uint32_t size, const int normalizing );
 	XnMapOutputMode getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages );
