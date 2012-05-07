@@ -46,14 +46,14 @@ class OpenNiDevice
 	xn::NodeInfo     getNodeInfo();
 	xn::NodeInfoList getNodeInfoList( const XnPredefinedProductionNodeType &nodeType  );
     
+	void getExistingProductionNode( const XnPredefinedProductionNodeType &nodeType, xn::ProductionNode& productionNode );
+
     static std::string xnNodeTypeToString( const XnPredefinedProductionNodeType& nodeType );
-    
 private:
 	mutable xn::Context m_Context;
 	std::string m_DeviceName;
 	NodeInfoRef m_DeviceInfo;
 
-	void getExistingProductionNode( const XnPredefinedProductionNodeType &nodeType, xn::ProductionNode& productionNode );
 	void convertImage_16_to_8( const boost::shared_array<uint16_t> source, boost::shared_array<unsigned char> destination, uint32_t size, const int normalizing );
 	XnMapOutputMode getRequestedOutputMode( const XnPredefinedProductionNodeType &nodeType, uint32_t configureImages );
 };
