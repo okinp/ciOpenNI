@@ -18,7 +18,6 @@ class OpenNiController
 public:
 	OpenNiController();
 	~OpenNiController();
-
 	xn::Context& getContext();
 	size_t const& getNumberOfConnectedDevices();
 

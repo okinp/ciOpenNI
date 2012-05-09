@@ -10,7 +10,7 @@ namespace {
 	{
 		if ( status != XN_STATUS_OK )
 		{
-			std::cout << strError << " " << xnGetStatusString( status ) << std::endl;
+			//std::cout << strError << " " << xnGetStatusString( status ) << std::endl;
 		}
 	};
 	

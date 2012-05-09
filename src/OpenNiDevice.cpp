@@ -341,22 +341,29 @@ void OpenNiDevice::convertRealWorldToProjective( XnUInt32 count, 		const XnPoint
 	if ( !hasGenerator(XN_NODE_TYPE_DEPTH) )
 	{
 		//Lets create the depthGenerator
+		std::cout << "A depth generator is needed to use the conversions" << std::endl;
 	} else {
 		//Lets use the already existing one
+		xn::DepthGenerator depthGen;
+		getExistingProductionNode( XN_NODE_TYPE_DEPTH, depthGen );
+		depthGen.ConvertRealWorldToProjective( count, aRealWorld, aProjective );
 	}
 	depthGen.ConvertRealWorldToProjective(count, aRealWorld, aProjective );
 }
 
-void OpenNiDevice::convertProjectiveToRealWorld( XnUInt32 count, 		const XnPoint3D  	aProjective[], XnPoint3D  	aRealWorld[] )
+void OpenNiDevice::convertProjectiveToRealWorld( XnUInt32 count, const XnPoint3D  	aProjective[], XnPoint3D  	aRealWorld[] )
 {
 	xn::DepthGenerator depthGen;
 	if ( !hasGenerator(XN_NODE_TYPE_DEPTH) )
 	{
 		//Lets create the depthGenerator
+		std::cout << "A depth generator is needed to use the conversions" << std::endl; 
 	} else {
 		//Lets use the already existing one
+		xn::DepthGenerator depthGen;
+		getExistingProductionNode( XN_NODE_TYPE_DEPTH, depthGen );
+		depthGen.ConvertRealWorldToProjective( count, aProjective, aRealWorld );
 	}
-	depthGen.ConvertProjectiveToRealWorld(count, aProjective, aRealWorld );
 }
 
 
@@ -420,5 +427,5 @@ std::string OpenNiDevice::xnNodeTypeToString( const XnPredefinedProductionNodeTy
 		break;
 	}
 	return nodeTypeString;
-}
+} 
 

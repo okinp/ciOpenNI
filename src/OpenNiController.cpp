@@ -174,7 +174,6 @@ OpenNiDevice& OpenNiController::operator[]( const size_t deviceIdx  )
 	return m_DeviceList[ deviceIdx ];
 }
 
-
 void OpenNiController::allignDepthImageToColor( const size_t &deviceIdx )
 {
 	
