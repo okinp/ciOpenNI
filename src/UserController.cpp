@@ -61,7 +61,7 @@ void UserController::getUsers()
 	delete [] aUsers;
 	aUsers  = new XnUserID[ m_NumUsers ];
 	m_UserGenerator.GetUsers( aUsers, m_NumUsers );
-
+	unsigned short 
 }
 
 size_t UserController::getNumberOfUsers()
