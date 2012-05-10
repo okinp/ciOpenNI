@@ -1,4 +1,4 @@
-#include "UserController.h"
+#include "OpenNiUserController.h"
 #include "ciOpenNiUtils.hpp"
 
 namespace {
@@ -6,12 +6,13 @@ namespace {
 	{
 		xn::UserGenerator *userGenerator = static_cast<xn::UserGenerator*>(pCookie);
 		userGenerator->GetSkeletonCap().RequestCalibration( nId, TRUE );
+		std::cout << "New user with ID: " << nId << std::endl;
 	}
 
 	//-----------------------------------------//
 	void XN_CALLBACK_TYPE lostUserCb(xn::UserGenerator& generator, XnUserID nId, void* pCookie )
 	{
-		std::cout << "Lost used with ID: " << nId << std::endl;
+		std::cout << "Lost user with ID: " << nId << std::endl;
 	}
 
 	//-----------------------------------------//
@@ -43,33 +44,52 @@ namespace {
 
 		userGenerator->GetSkeletonCap().RequestCalibration( nId, TRUE );
 	}
+} //End unnamed namespace
+
+OpenNiUserController::OpenNiUserController( xn::UserGenerator generator )
+	:m_UserGenerator( generator ),
+	 m_Users( new XnUserID[ MAX_NUM_USERS ] ),
+	 m_NumUsers( 0 )
+{
+	registerUserCallbacks();
 }
 
-UserController::UserController( xn::NodeInfo deviceInfo )
+XnSkeletonJointTransformation OpenNiUserController::getSkeletonJoint( XnUInt16 userIdx, XnSkeletonJoint jointType  )
+{
+	//getUsers();
+	try
+	{
+		XnSkeletonJointTransformation requestedJoint;
+		m_UserGenerator.GetSkeletonCap().GetSkeletonJoint( m_Users[userIdx], jointType, requestedJoint );
+		return requestedJoint;
+	}
+	catch ( std::exception& e  )
+	{
+		std::cout << "Could not get skeleton joint." << std::endl;
+	}
+}
+
+void OpenNiUserController::getUsers()
 {
 
+	try
+	{
+		m_NumUsers = MAX_NUM_USERS;
+		m_UserGenerator.GetUsers( m_Users, m_NumUsers );
+		std::cout << "this is working" << std::endl;
+	}
+	catch ( std::exception& e  )
+	{
+		std::cout << "Could not update available Users" << std::endl;
+	}
 }
 
-size_t UserController::getSkeletonData()
-{
-
-}
-
-void UserController::getUsers()
-{
-	m_NumUsers = getNumberOfUsers();
-	delete [] aUsers;
-	aUsers  = new XnUserID[ m_NumUsers ];
-	m_UserGenerator.GetUsers( aUsers, m_NumUsers );
-	unsigned short 
-}
-
-size_t UserController::getNumberOfUsers()
+size_t OpenNiUserController::getNumberOfUsers()
 {
 	return m_UserGenerator.GetNumberOfUsers();
 }
 
-void UserController::registerUserCallbacks()
+void OpenNiUserController::registerUserCallbacks()
 {
 	if (!m_UserGenerator.IsCapabilitySupported( XN_CAPABILITY_SKELETON ) )
 	{

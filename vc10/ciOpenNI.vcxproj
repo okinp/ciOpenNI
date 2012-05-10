@@ -106,8 +106,8 @@
   <ItemGroup>
     <ClInclude Include="..\include\OpenNiController.h" />
     <ClInclude Include="..\include\OpenNiDevice.h" />
+    <ClInclude Include="..\include\OpenNiUserController.h" />
     <ClInclude Include="..\include\Resources.h" />
-    <ClInclude Include="..\include\UserController.h" />
     <ClInclude Include="..\include\_2RealLogger.h" />
     <ClInclude Include="..\include\_2RealTypes.h" />
     <ClInclude Include="..\include\_2RealUtility.hpp" />
@@ -122,7 +122,7 @@
     <ClCompile Include="..\src\ciOpenNIApp.cpp" />
     <ClCompile Include="..\src\OpenNiController.cpp" />
     <ClCompile Include="..\src\OpenNiDevice.cpp" />
-    <ClCompile Include="..\src\UserController.cpp" />
+    <ClCompile Include="..\src\OpenNiUserController.cpp" />
     <ClCompile Include="..\src\_2RealLogger.cpp" />
     <ClCompile Include="..\src\_2RealTypes.cpp" />
     <ClCompile Include="..\src\_2RealVector2f.cpp" />

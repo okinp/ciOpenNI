@@ -56,6 +56,9 @@ void ciOpenNIAppApp::update()
 	m_KinectController.updateContext();
 	imgRefDev0 = m_KinectController.getImageData( 0, COLORIMAGE );
 	imgRefDev1 = m_KinectController.getImageData( 0, DEPTHIMAGE );
+
+	XnSkeletonJointTransformation joint = m_KinectController[0].getSkeletonJoint( 0, XN_SKEL_TORSO );
+
 	//colorDev0  = m_KinectController->getImageData( 0, COLORIMAGE );
 	////TODO: is the ghosting in the user image some kind of casting problem from 16 to 8 bit?
 	//usrImgDev0 = m_KinectController->getImageData( 0, USERIMAGE );

@@ -8,6 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <memory>
+#include "OpenNiUserController.h"
 
 //sensor reaches up to 10 meters in OpenNI
 #define _2REAL_OPENNI_DEPTH_NORMALIZATION_16_TO_8 10000
@@ -36,6 +37,9 @@ class OpenNiDevice
 	void stopGenerator( const XnPredefinedProductionNodeType &nodeType );
 	
 	bool hasNewData( const XnPredefinedProductionNodeType &nodeType );
+
+	XnSkeletonJointTransformation	getSkeletonJoint( XnUInt16 userIdx, XnSkeletonJoint jointType );
+	size_t getNumberOfUsers() const;
 	
 	ImageDataRef       getBuffer( const XnPredefinedProductionNodeType &nodeType );
 	ImageData16Ref     getBuffer16( const XnPredefinedProductionNodeType &nodeType );
@@ -51,6 +55,7 @@ class OpenNiDevice
     static std::string xnNodeTypeToString( const XnPredefinedProductionNodeType& nodeType );
 private:
 	mutable xn::Context m_Context;
+	boost::shared_ptr< OpenNiUserController > m_UserControllerRef;
 	std::string m_DeviceName;
 	NodeInfoRef m_DeviceInfo;
 

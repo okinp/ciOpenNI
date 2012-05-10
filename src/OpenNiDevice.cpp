@@ -4,11 +4,11 @@
 #include "ciOpenNiUtils.hpp"
 
 using namespace  _2RealKinectWrapper;
-
 OpenNiDevice::OpenNiDevice()
 	:m_Context( xn::Context() ),
 	 m_DeviceInfo( NodeInfoRef() ),
-	 m_DeviceName("Device")
+	 m_DeviceName("Device"),
+	 m_UserControllerRef( boost::shared_ptr< OpenNiUserController >() )
 {
 
 }
@@ -16,7 +16,8 @@ OpenNiDevice::OpenNiDevice()
 OpenNiDevice::OpenNiDevice( xn::Context context,  NodeInfoRef deviceInfo, std::string deviceName )
 	:m_Context( context ),
 	 m_DeviceInfo( deviceInfo ),
-	 m_DeviceName( deviceName )
+	 m_DeviceName( deviceName ),
+	 m_UserControllerRef( boost::shared_ptr< OpenNiUserController >() )
 {
 
 }
@@ -63,6 +64,7 @@ void OpenNiDevice::addGenerator( const XnPredefinedProductionNodeType &nodeType,
             getExistingProductionNode( nodeType, mapGenerator );
             checkError( mapGenerator.SetMapOutputMode( mode ), "_2Real: Error when setting outputmode \n" );
 		}
+
 	} else
 	{
 		std::cout << "Generator for nodetype: " << xnNodeTypeToString(nodeType) << " already exists." << std::endl;
@@ -109,9 +111,6 @@ void OpenNiDevice::startGenerator( const XnPredefinedProductionNodeType &nodeTyp
 	if ( !generator.IsGenerating() )
 	{
 		generator.StartGenerating();
-	} else 
-	{
-		std::cout << "Nodetype: " << xnNodeTypeToString(nodeType) << " is already generating." << std::endl;
 	}
 }
 
@@ -122,9 +121,6 @@ void OpenNiDevice::stopGenerator( const XnPredefinedProductionNodeType &nodeType
 	if ( generator.IsGenerating() )
 	{
 		generator.StopGenerating();
-	} else 
-	{
-		std::cout << "Nodetype: " << xnNodeTypeToString(nodeType) << " is not generating." << std::endl;
 	}
 }
 
@@ -262,6 +258,58 @@ bool OpenNiDevice::hasNewData( const XnPredefinedProductionNodeType &nodeType )
 	return false;
 }
 
+XnSkeletonJointTransformation	OpenNiDevice::getSkeletonJoint( XnUInt16 userIdx, XnSkeletonJoint jointType )
+{
+	XnSkeletonJointTransformation requestedJoint;
+	requestedJoint.position.position.X = requestedJoint.position.position.Y = requestedJoint.position.position.Z  = 0;
+	requestedJoint.position.fConfidence = 0.f;
+	requestedJoint.orientation.fConfidence = 0.f;
+	requestedJoint.orientation.orientation.elements[0] = 
+	requestedJoint.orientation.orientation.elements[1] = 
+	requestedJoint.orientation.orientation.elements[2] = 
+	requestedJoint.orientation.orientation.elements[3] = 
+	requestedJoint.orientation.orientation.elements[4] = 
+	requestedJoint.orientation.orientation.elements[5] = 
+	requestedJoint.orientation.orientation.elements[6] = 
+	requestedJoint.orientation.orientation.elements[7] = 
+	requestedJoint.orientation.orientation.elements[8] = 0.f;
+
+	try
+	{
+		xn::UserGenerator userGen;
+		getExistingProductionNode( XN_NODE_TYPE_USER, userGen );
+		if ( userGen.IsGenerating() )
+		{
+			//userGen.StartGenerating();
+			if ( !m_UserControllerRef )
+			{
+				userGen.AddRef();
+				m_UserControllerRef = boost::shared_ptr< OpenNiUserController >( new OpenNiUserController( userGen ) );
+			}
+
+			XnSkeletonJointTransformation requestedJoint = m_UserControllerRef->getSkeletonJoint( userIdx, jointType );
+			return requestedJoint;
+		}  else {
+			throw 1;
+		}
+	}
+	catch ( int i )
+	{
+		std::cout << "User generator exists but is not generating." << std::endl;
+	}
+	catch ( ... )
+	{
+		std::cout << "Couldn't get joint" << std::endl;
+	}
+
+
+
+//	if ( hasGenerator( XN_NODE_TYPE_USER )  )
+//	{
+//
+//	}	
+}
+
 ImageDataRef OpenNiDevice::getBuffer( const XnPredefinedProductionNodeType &nodeType )
 {
 	ImageDataRef buffer;
@@ -365,7 +413,6 @@ void OpenNiDevice::convertProjectiveToRealWorld( XnUInt32 count, const XnPoint3D
 		depthGen.ConvertRealWorldToProjective( count, aProjective, aRealWorld );
 	}
 }
-
 
 std::string OpenNiDevice::xnNodeTypeToString( const XnPredefinedProductionNodeType& nodeType )
 {

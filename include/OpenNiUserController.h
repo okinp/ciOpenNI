@@ -1,13 +1,13 @@
 #pragma once
 #include <XnCppWrapper.h>
-class UserController {
+#define MAX_NUM_USERS 20 
+class OpenNiUserController {
 public:
-	UserController( xn::NodeInfo deviceInfo );
+	OpenNiUserController( xn::UserGenerator generator );
 	void getUsers();
 	size_t getNumberOfUsers();
-	XnSkeletonJointTransformation	getSkeletonData( const size_t userId, XN_SKEL_TORSO );
+	XnSkeletonJointTransformation	getSkeletonJoint( XnUInt16 userIdx, XnSkeletonJoint jointType);
 	
-
 private:
 
 	void registerUserCallbacks();
@@ -17,6 +17,6 @@ private:
 	XnCallbackHandle userCbHandle;
 	XnCallbackHandle calibrationStartedCbHandle;
 	XnCallbackHandle calibrationCompletedCbHandle;
-	size_t m_NumUsers;
-	XnUserID *aUsers;
+	XnUInt16 m_NumUsers;
+	XnUserID *m_Users;
 };
